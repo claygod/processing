@@ -1,0 +1,87 @@
+package processing
+
+// Processing
+// Base58
+// Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
+
+import (
+	"encoding/binary"
+	"errors"
+)
+
+const alphabet string = `123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz`
+
+// An coder implements indigo.coder interface by Base58.
+type base58 struct {
+	alphabet  [58]byte
+	decodeMap [256]int
+}
+
+// NewBase58 returns new base58.coder.
+func NewBase58() *base58 {
+	enc, err := createBase58()
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// createBase58 returns new base58.coder.
+func createBase58() (*base58, error) {
+
+	if len(alphabet) != 58 {
+		return nil, errors.New("base58: encoding alphabet is not 58-bytes long")
+	}
+
+	enc := new(base58)
+
+	for i := range enc.decodeMap {
+		enc.decodeMap[i] = -1
+	}
+
+	for i := range alphabet {
+		enc.alphabet[i] = byte(alphabet[i])
+		enc.decodeMap[enc.alphabet[i]] = i
+	}
+
+	return enc, nil
+}
+
+// Encode returns encoded string by Base58.
+func (enc *base58) Encode(id uint64) string {
+
+	if id == 0 {
+		return string(enc.alphabet[:1])
+	}
+
+	bin := make([]byte, 0, binary.MaxVarintLen64)
+	for id > 0 {
+		bin = append(bin, enc.alphabet[id%58])
+		id /= 58
+	}
+
+	for i, j := 0, len(bin)-1; i < j; i, j = i+1, j-1 {
+		bin[i], bin[j] = bin[j], bin[i]
+	}
+
+	return string(bin)
+}
+
+// Decode returns decoded unsigned int64 by Base58.
+func (enc *base58) Decode(id string) (uint64, error) {
+
+	if id == "" {
+		return 0, errors.New("base58: id should not be empty")
+	}
+
+	var n uint64
+	for i := range id {
+		u := enc.decodeMap[id[i]]
+		if u < 0 {
+			return 0, errors.New("base58: invalid character - " + string(id[i]))
+		}
+		n = n*58 + uint64(u)
+	}
+
+	return n, nil
+}

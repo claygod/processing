@@ -1,0 +1,87 @@
+package processing
+
+// Processing
+// Base58 test
+// Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
+
+import (
+	"math"
+	"math/rand"
+	"testing"
+	"time"
+)
+
+var bc = map[uint64]string{
+	0:              "1",
+	57:             "z",
+	math.MaxUint8:  "5Q",
+	math.MaxUint16: "LUv",
+	math.MaxUint32: "7YXq9G",
+	math.MaxUint64: "jpXCZedGfVQ",
+}
+
+func TestMustNewEncoder(t *testing.T) {
+
+	if b58 := NewBase58(); b58 == nil {
+		t.Error("NewCoder - error")
+	}
+
+}
+
+func TestNewEncoder(t *testing.T) {
+
+	if _, err := createBase58(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestCoderEncode(t *testing.T) {
+
+	id := NewBase58().Encode(0)
+	if id != "1" {
+		t.Error("Error in encode '0'")
+	}
+
+	for k, v := range bc {
+		if NewBase58().Encode(k) != v {
+			t.Errorf("Error in encode '%s' => %v", v, k)
+		}
+	}
+}
+
+func TestCoderDecode(t *testing.T) {
+
+	for k, v := range bc {
+		if res, err := NewBase58().Decode(v); res != k {
+			t.Errorf("Error in decode '%s' => %v (%s)", v, k, err)
+		}
+	}
+}
+
+func BenchmarkCoderEncode(b *testing.B) {
+
+	s := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		NewBase58().Encode(uint64(s.Int63()))
+	}
+}
+
+func BenchmarkCoderDecode(b *testing.B) {
+
+	l := len(bc)
+	s := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	vs := make([]string, 0, l)
+	for k := range bc {
+		vs = append(vs, bc[k])
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		NewBase58().Decode(vs[s.Intn(l)])
+	}
+}
