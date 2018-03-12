@@ -8,6 +8,7 @@ import (
 	//"bytes"
 	"crypto/sha256"
 	// "strconv"
+	"math/big"
 	"time"
 	"unsafe"
 )
@@ -18,9 +19,7 @@ const defaultBlockSize int = 128 // 120 + alignment
 Account - keeps a balance.
 */
 type Account struct {
-	Owner    int64
-	Operator int64
-	//counter  int64
+	Id      string
 	Balance int64
 	//Reserve int64
 	Chain []*Block
@@ -29,9 +28,9 @@ type Account struct {
 /*
 NewAccount - create new account.
 */
-func NewAccount(owner int64) *Account {
+func NewAccount(id string) *Account {
 	a := &Account{
-		Owner: owner,
+		Id:    id,
 		Chain: make([]*Block, 0),
 	}
 	return a
@@ -46,7 +45,7 @@ type Chain struct {
 
 func NewChain() *Chain {
 	c := &Chain{ch: make([]*Block, defaultBlockSize)}
-	c.AddBlock(NewBlock(0, 0, [32]byte{}))
+	c.AddBlock(NewBlock("", 0, [32]byte{}))
 	return c
 }
 
@@ -63,8 +62,10 @@ func (c *Chain) Check(shift int, h [32]byte) bool {
 
 type Block struct {
 	Timestamp []byte // 40b
-	Author    int64
+	Author    string
 	Addinion  int64
+	r         *big.Int
+	s         *big.Int
 	PrevHash  [32]byte
 	Hash      [32]byte
 }
@@ -72,7 +73,7 @@ type Block struct {
 /*
 NewBlock - create new block.
 */
-func NewBlock(author int64, amount int64, prevHash [32]byte) *Block {
+func NewBlock(author string, amount int64, prevHash [32]byte) *Block {
 	b := &Block{
 		Timestamp: []byte(time.Now().String()),
 		Author:    author,

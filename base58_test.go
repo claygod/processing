@@ -37,7 +37,7 @@ var examples = []example{
 func TestBase58Encode(t *testing.T) {
 	for _, example := range examples {
 		for _, pair := range example.tpairs {
-			got, err := example.coder.Encode([]byte(pair.decoded))
+			got, err := example.coder.Encode(pair.decoded)
 			if err != nil {
 				t.Errorf("Error occurred while encoding %s.", pair.decoded)
 			}
@@ -66,7 +66,7 @@ func BenchmarkBase58Encode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for _, example := range examples {
 			for _, pair := range example.tpairs {
-				_, _ = example.coder.Encode([]byte(pair.decoded))
+				_, _ = example.coder.Encode(pair.decoded)
 			}
 		}
 	}

@@ -36,11 +36,11 @@ func reverse(data []byte) {
 }
 
 // Encode - encodes the number represented in the byte array base 10.
-func (b58 *base58) Encode(src []byte) ([]byte, error) {
+func (b58 *base58) Encode(src string) ([]byte, error) {
 	if len(src) == 0 {
 		return []byte{}, nil
 	}
-	n, ok := new(big.Int).SetString(string(src), 16)
+	n, ok := new(big.Int).SetString(src, 10)
 	if !ok {
 		return nil, fmt.Errorf("Expecting a number but got %q", src)
 	}

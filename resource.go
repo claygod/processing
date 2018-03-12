@@ -8,13 +8,14 @@ package processing
 Resource - an important node in the network.
 */
 type Resource struct {
-	id int64
+	id   int64
+	name string
 }
 
 /*
 NewResource - create new Resource.
 */
-func NewResource() *Resource {
-	a := &Resource{}
-	return a
+func NewResource(name string) *Resource {
+	r := &Resource{name: name}
+	return r
 }

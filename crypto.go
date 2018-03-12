@@ -14,7 +14,8 @@ import (
 	//"crypto/sha1"
 	"crypto/sha256"
 	"crypto/x509"
-	"encoding/base64"
+	//"encoding/base64"
+	//"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -38,40 +39,28 @@ func NewCrypto() (*Crypto, error) {
 	c := &Crypto{
 		pubKey: make([]byte, 0),
 	}
-	//fmt.Println("Level 0")
 	pubKey, pvtKey := c.genNewKeys()
-	//fmt.Println("Level 1")
 	kb, err := newKeyBox(pvtKey)
-	//fmt.Println("Level 2")
 	if err != nil {
 		fmt.Println("Level keybox")
 		return nil, err
 	}
-	//fmt.Println("Level 3")
 	c.pubKey = pubKey
 	c.pvtKey = kb
+	// fmt.Println("--pvtKey---", pvtKey)
 	sh1 := sha256.Sum256(pubKey)
 	sh := sha256.Sum256(sh1[:])
-	//fmt.Println("Level 4")
-	//address, err := NewBase58().Encode(sh[0:32])
-	//fmt.Println("Level 5", sh[0:32])
-	//fmt.Println(string(sh[0:32]))
-	//fmt.Println(sh)
-	//fmt.Println(base64.StdEncoding.EncodeToString(sh[0:32]))
-	//fmt.Println(sh[0:32])
-	//fmt.Println(err)
-	if err != nil {
-		return nil, err
-	}
-	//h := hmac.New(sha1.New(), key)
-	//fmt.Println(h.)
-	c.address = base64.StdEncoding.EncodeToString(sh[0:32])
-	tsh := []byte{0x00}
-	tsh = append(tsh, sh1[:]...)
-	fmt.Println(string(tsh))
-	fmt.Println(tsh)
-	fmt.Println("----------")
-	//fmt.Println(NewBase58().Encode(tsh))
+	//c.address = base64.StdEncoding.EncodeToString(sh[0:32])
+
+	n := new(big.Int).SetBytes(sh[0:32])
+	addr, _ := NewBase58().Encode(n.String())
+	c.address = string(addr)
+	//tsh := []byte{0x00}
+	//tsh = append(tsh, sh1[:]...)
+	//fmt.Println(string(tsh))
+	//fmt.Println(tsh)
+	//fmt.Println("----------")
+
 	return c, nil
 }
 
@@ -114,7 +103,7 @@ func (c *Crypto) verify(str []byte, pub_key_bytes []byte, r *big.Int, s *big.Int
 keyBox - to store the password.
 */
 type keyBox struct {
-	rndKey []byte
+	rndKey []byte // for safety, keep separate
 	pass   []byte
 }
 

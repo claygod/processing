@@ -14,7 +14,7 @@ func TestCriptoNew(t *testing.T) { //t.Errorf("Encode(%s) = %s, want %s", pair.d
 	if err != nil {
 		t.Error("Error  - create new crypto.")
 	}
-	fmt.Println(c.pvtKey.key())
-	fmt.Println(c.pubKey)
-	fmt.Println(c.address)
+	//fmt.Println("pvtkey: ", c.pvtKey.key())
+	//fmt.Println("pubkey: ", c.pubKey)
+	fmt.Println("address: ", c.address)
 }
