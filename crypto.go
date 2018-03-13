@@ -64,6 +64,14 @@ func NewCrypto() (*Crypto, error) {
 	return c, nil
 }
 
+func PubKeyToAddress(pubKey []byte) string {
+	sh1 := sha256.Sum256(pubKey)
+	sh2 := sha256.Sum256(sh1[:])
+	n := new(big.Int).SetBytes(sh2[0:32])
+	addr, _ := NewBase58().Encode(n.String())
+	return string(addr)
+}
+
 func (c *Crypto) genNewKeys() ([]byte, []byte) {
 	pvt_key, _ := ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
 	pvt_key_bytes, _ := x509.MarshalECPrivateKey(pvt_key)

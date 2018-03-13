@@ -10,23 +10,28 @@ import "time"
 Authority - an important node in the network.
 */
 type Authority struct {
-	Id        string `json:"id"`
-	Url       string `json:"url"`
-	Status    int64
-	timeShift int64
+	Id         *Id
+	PubKey64   string   `json:"pub_key_64"`
+	Url        string   `json:"url"`
+	Groups     []string `json:"groups_list"`
+	Status     int64
+	lastUpdate int64
+	timeShift  int64
 }
 
 /*
 NewAuthority - create new Authority.
 */
-func NewAuthority(id string, url string) *Authority {
+/*
+func NewAuthority(id *Id, url string) *Authority {
 	a := &Authority{
-		Id:  id,
-		Url: url,
+		Id:     id,
+		Url:    url,
+		Groups: make([]*Group, 0),
 	}
 	return a
 }
-
+*/
 func (a *Authority) CheckStatus() { // ToDo: the "method" mov to Node
 	// Ping
 	a.Status = time.Now().Unix()

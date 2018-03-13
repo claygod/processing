@@ -1,10 +1,12 @@
 [
 	{
-		"id": "8346834823yye23ye",
-		"url": "http://localhost/1"
+		"pub_key_64": "bjczMmgjJCUlJERD",
+		"url": "http://localhost/1",
+		"groups_list": ["abc", "def"]
 	},
 	{
-		"id": "2322997297n2n9297",
-		"url": "http://localhost/2"
+		"pub_key_64": "c2RqaEAjJmdmQF4qaGc=",
+		"url": "http://localhost/2",
+		"groups_list": ["abc", "def"]
 	}
 ]

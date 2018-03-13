@@ -7,10 +7,16 @@ package processing
 import (
 	"bytes"
 	"encoding/json"
+	// "errors"
+	"fmt"
 	"net/http"
 	"time"
 )
 
+const (
+	ReqTypeQuestion int = iota
+	ReqTypeAnswer
+)
 const timeDurationTimeout time.Duration = 10 * time.Second
 
 /*
@@ -54,12 +60,12 @@ func (a *Sender) getJsonSSrequest(structRequest interface{}) []byte {
 }
 */
 
-func (s *Sender) Request() *Request {
-	return &Request{send: s}
+func (s *Sender) Request() *ReqHelper {
+	return &ReqHelper{send: s}
 }
 
 // send - sending request
-func (s *Sender) send(req *Request) (interface{}, error) {
+func (s *Sender) send(req *ReqHelper) (interface{}, error) {
 	client := &http.Client{Timeout: timeDurationTimeout}
 
 	qJson, err := json.Marshal(req.structRequest)
@@ -75,47 +81,87 @@ func (s *Sender) send(req *Request) (interface{}, error) {
 	r.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(r)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Response status: `%s`. %v", resp.Status, err)
 	}
 	defer resp.Body.Close()
 
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&req.structResponse)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Response status: `%s`. %v", resp.Status, err)
 	}
 
 	return req.structResponse, nil
 }
 
-type Request struct {
+/*
+sendJson
+Important: the answer must be then closed!
+*/
+func (s *Sender) sendJson(req *ReqHelper) (*http.Response, error) {
+	client := &http.Client{Timeout: timeDurationTimeout}
+
+	r, err := http.NewRequest(req.method, req.url, bytes.NewBuffer(req.buf))
+	if err != nil {
+		return nil, err
+	}
+
+	r.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(r)
+	return resp, err
+}
+
+type ReqHelper struct {
 	send           *Sender
 	method         string
 	url            string
+	buf            []byte
 	structRequest  interface{}
 	structResponse interface{}
 }
 
-func (r *Request) Method(method string) *Request {
+func (r *ReqHelper) Method(method string) *ReqHelper {
 	r.method = method
 	return r
 }
 
-func (r *Request) Url(url string) *Request {
+func (r *ReqHelper) Url(url string) *ReqHelper {
 	r.url = url
 	return r
 }
 
-func (r *Request) StructRequest(strct interface{}) *Request {
+func (r *ReqHelper) Buf(buf []byte) *ReqHelper {
+	r.buf = buf
+	return r
+}
+
+func (r *ReqHelper) StructRequest(strct interface{}) *ReqHelper {
 	r.structRequest = strct
 	return r
 }
 
-func (r *Request) StructResponse(strct interface{}) *Request {
+func (r *ReqHelper) StructResponse(strct interface{}) *ReqHelper {
 	r.structResponse = strct
 	return r
 }
 
-func (r *Request) Send() (interface{}, error) {
+func (r *ReqHelper) Send() (interface{}, error) {
 	return r.send.send(r)
+}
+
+type Request struct {
+	Type        int               `json:"type"` // question or answer
+	Method      int               `json:"method"`
+	TimeSendReq int64             `json:"timesendreq"`
+	TimeMyShift int64             `json:"timemyshift"`
+	Context     map[string]string `json:"context"`
+}
+
+type Response struct {
+	Status      int               `json:"status"`
+	TimeSendReq int64             `json:"timesendreq"`
+	TimeRecdReq int64             `json:"timerecdreq"`
+	TimeSendRes int64             `json:"timesendres"`
+	TimeMyShift int64             `json:"timemyshift"`
+	Context     map[string]string `json:"context"`
 }

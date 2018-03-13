@@ -10,8 +10,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"runtime"
-	"sync"
+	// "sync"
+	"encoding/base64"
+	"sync/atomic"
 	"time"
+)
+
+const (
+	flagStop int32 = iota
+	flagWork
 )
 
 const defaultAuthoritiesListPath string = "./authorities.json"
@@ -21,26 +28,29 @@ const timePauseWorkerAuthStatus time.Duration = 100 * time.Millisecond
 Node - complete network node.
 */
 type Node struct {
-	my *Authority
-	//authorities map[string]*Authority
-	auths    sync.Map
-	accounts map[string]*Account
+	my          *Authority
+	authorities map[string]*Group
+	auths       *Group
+	accounts    map[string]*Account
+	flags       map[string]*int32
 }
 
 /*
 NewNode - create new Node.
 */
-func NewNode(id string, path string) (*Node, error) {
+func NewNode(address string, path string) (*Node, error) {
 	n := &Node{
-		accounts: make(map[string]*Account),
+		authorities: make(map[string]*Group),
+		accounts:    make(map[string]*Account),
+		auths:       NewGroup(),
 	}
 	if err := n.loadAuthList(path); err != nil {
 		return nil, err
 	}
 	//my, ok := authorities[id] // is there any node in the list
-	my, ok := n.auths.Load(id)
+	my, ok := n.auths.Load(address)
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("The key %s is not found in the list", id))
+		return nil, errors.New(fmt.Sprintf("The key (address) %s is not found in the list", address))
 	}
 	n.my = my.(*Authority)
 	//n.authorities = authorities
@@ -58,40 +68,74 @@ func (n *Node) loadAuthList(path string) error {
 	}
 
 	var authSlice []Authority
-	//var authMap = make(map[string]*Authority)
 
 	if err := json.Unmarshal(bs, &authSlice); err != nil {
 		return err
 	}
 
 	for _, a := range authSlice {
-		if a.Id != "" && a.Url != "" { // Filtering out incorrect entries
-			//authMap[a.Id] = &a
-			n.auths.Store(a.Id, &a)
+		if a.Url != "" &&
+			a.PubKey64 != "" &&
+			len(a.Groups) != 0 { // Filtering out incorrect entries
+			pubKey, err := base64.StdEncoding.DecodeString(a.PubKey64)
+			if err != nil {
+				continue
+			}
+			address := PubKeyToAddress(pubKey)
+			// fmt.Println("===", address)
+			n.auths.Store(address, &a)
+			for _, gName := range a.Groups {
+				g, ok := n.authorities[gName]
+				if !ok {
+					g = NewGroup()
+					n.authorities[gName] = g
+				}
+				g.Store(address, &a)
+			}
 		}
 	}
 	return nil
 }
 
 /*
-workerAuthStatus - load authorities list from file.
+worker - universal performer in cycles.
 */
-func (n *Node) workerAuthStatus() {
+func (n *Node) worker(flag *int32, f func(*int32)) {
+	// atomic.StoreInt32(flag, flagWork)
 	for {
-		n.checkAuthStatus()
+		f(flag)
+		if atomic.LoadInt32(flag) == flagStop {
+			return
+		}
+	}
+}
+
+/*
+worker - universal performer in cycles with channel.
+*/
+func (n *Node) workerChan(flag *int32, f func(*int32, chan interface{}), ch chan interface{}) {
+	// atomic.StoreInt32(flag, flagWork)
+	for {
+		f(flag, ch)
+		if atomic.LoadInt32(flag) == flagStop {
+			return
+		}
 	}
 }
 
 /*
 checkAuthStatus - check authorities status.
 */
-func (n *Node) checkAuthStatus() {
+func (n *Node) checkAuthStatus(flag *int32) {
 	n.auths.Range(func(k, v interface{}) bool {
 		fmt.Println("key:", k, ", val:", v)
 		a := v.(*Authority)
 		a.CheckStatus()
 		time.Sleep(timePauseWorkerAuthStatus)
 		runtime.Gosched()
+		if atomic.LoadInt32(flag) == flagStop {
+			return false
+		}
 		return true // if false, Range stops
 	})
 }
