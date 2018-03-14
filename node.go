@@ -16,14 +16,6 @@ import (
 	"time"
 )
 
-const (
-	flagStop int32 = iota
-	flagWork
-)
-
-const defaultAuthoritiesListPath string = "./authorities.json"
-const timePauseWorkerAuthStatus time.Duration = 100 * time.Millisecond
-
 /*
 Node - complete network node.
 */

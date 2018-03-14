@@ -4,7 +4,7 @@ package processing
 // Broadcast
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
-// "sync"
+import "time"
 
 /*
 Broadcast - broad distribution of messages.
@@ -20,27 +20,27 @@ func NewBroadcast() *Broadcast {
 	return &Broadcast{}
 }
 
-func (b *Broadcast) Dispatch(groups []*Group, req *ReqHelper) (map[string]interface{}, map[string]error) {
-	list := make(map[string]interface{})
-	listOk := make(map[string]interface{})
-	listErr := make(map[string]error)
+func (b *Broadcast) Dispatch(groups []*Group, rh *ReqHelper) (map[string]*ReqHelper, map[string]*ReqHelper) {
+	list := make(map[string]*Authority)
+	listOk := make(map[string]*ReqHelper)
+	listErr := make(map[string]*ReqHelper)
 	// make total list
 	for _, g := range groups {
 		g.Range(func(k, v interface{}) bool {
 			ki := k.(string)
-			list[ki] = v
+			list[ki] = v.(*Authority)
 			return true // if false, Range stops
 		})
 	}
 
-	for k, v := range list {
-		a := v.(*Authority)
-		req.Url(a.Url)
-		res, err := b.send.send(req)
+	for k, a := range list {
+		// ToDo: менять ли r,s для каждого ? Нет, накладно пожалуй...
+		rh.req.Stamp.ExitTime = time.Now().Unix()
+		rh, err := rh.Url(a.Url).Send() // b.send.send(req)
 		if err != nil {
-			listErr[k] = err
+			listErr[k] = rh
 		} else {
-			listOk[k] = res
+			listOk[k] = rh
 		}
 	}
 	return listOk, listErr

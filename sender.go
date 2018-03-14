@@ -7,117 +7,105 @@ package processing
 import (
 	"bytes"
 	"encoding/json"
-	// "errors"
 	"fmt"
 	"net/http"
-	"time"
+	"strconv"
 )
-
-const (
-	ReqTypeQuestion int = iota
-	ReqTypeAnswer
-)
-const timeDurationTimeout time.Duration = 10 * time.Second
 
 /*
 Sender - sending requests and receiving replies.
 */
 type Sender struct {
-	my *Authority
+	// my     *Authority
+	crypto *Crypto
 }
 
 /*
 NewSender - create new Sender.
 */
-func NewSender() *Sender {
-	r := &Sender{}
+func NewSender(crypto *Crypto) *Sender {
+	r := &Sender{crypto: crypto}
 	return r
 }
 
-/*
-// Verification - проверка на доступ с получением userId
-func (a *Sender) Verification(sessionId string, cabinetId int) (bool, int) {
-qJson := a.getJsonSSrequest(sessionId, cabinetId)
-if qJson == nil {
-return false, -1
-}
-userId, sCode := a.sendRequest(qJson)
-if sCode == 200 {
-return true, userId
-}
-return false, userId
-}
-
-// getJsonSSrequest - подготовка запроса в json формате
-func (a *Sender) getJsonSSrequest(structRequest interface{}) []byte {
-	qJson, err := json.Marshal(structRequest)
-	if err != nil {
-		//lgMsg := &logMessage{"error", ERRORsendHTTPrequest, Fields{"error_context": err.Error()}}
-		//a.logger <- lgMsg
-		return nil
-	}
-	return qJson
-}
-*/
-
 func (s *Sender) Request() *ReqHelper {
-	return &ReqHelper{send: s}
+	return NewReqHelper(s)
 }
 
 // send - sending request
-func (s *Sender) send(req *ReqHelper) (interface{}, error) {
-	client := &http.Client{Timeout: timeDurationTimeout}
-
-	qJson, err := json.Marshal(req.structRequest)
-	if err != nil {
-		return nil, err
+func (s *Sender) send(rh *ReqHelper) error {
+	if err := s.fillStamp(&rh.req.Stamp, rh.req); err != nil {
+		rh.err = err
+		return err
 	}
 
-	r, err := http.NewRequest(req.method, req.url, bytes.NewBuffer(qJson))
+	client, r, err := s.newHttp(rh)
 	if err != nil {
-		return nil, err
+		rh.err = err
+		return err
 	}
 
-	r.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(r)
 	if err != nil {
-		return nil, fmt.Errorf("Response status: `%s`. %v", resp.Status, err)
+		err2 := fmt.Errorf("Response status: `%s`. %v", resp.Status, err)
+		rh.err = err2
+		return err2
 	}
 	defer resp.Body.Close()
 
 	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&req.structResponse)
+	err = decoder.Decode(&rh.res)
 	if err != nil {
-		return nil, fmt.Errorf("Response status: `%s`. %v", resp.Status, err)
+		err2 := fmt.Errorf("Response status: `%s`. %v", resp.Status, err)
+		rh.err = err2
+		return err2
 	}
 
-	return req.structResponse, nil
+	return nil
 }
 
-/*
-sendJson
-Important: the answer must be then closed!
-*/
-func (s *Sender) sendJson(req *ReqHelper) (*http.Response, error) {
-	client := &http.Client{Timeout: timeDurationTimeout}
-
-	r, err := http.NewRequest(req.method, req.url, bytes.NewBuffer(req.buf))
+func (s *Sender) newHttp(rh *ReqHelper) (*http.Client, *http.Request, error) {
+	qJson, err := json.Marshal(rh.req)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
+	}
+
+	r, err := http.NewRequest(rh.method, rh.url, bytes.NewBuffer(qJson))
+	if err != nil {
+		return nil, nil, err
 	}
 
 	r.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(r)
-	return resp, err
+	return &http.Client{Timeout: timeDurationTimeout}, r, nil
+}
+
+func (s *Sender) fillStamp(st *Stamp, msg *Message) error {
+	st.From = s.crypto.address
+	rr, ss, err := s.crypto.sign([]byte(msg.getDataForVerification()))
+	if err != nil {
+		return err
+	}
+	st.R10 = rr.String()
+	st.S10 = ss.String()
+	return nil
 }
 
 type ReqHelper struct {
-	send           *Sender
-	method         string
-	url            string
-	buf            []byte
-	structRequest  interface{}
-	structResponse interface{}
+	send   *Sender
+	method string
+	url    string
+	req    *Message
+	res    *Message
+	err    error
+}
+
+func NewReqHelper(s *Sender) *ReqHelper {
+	return &ReqHelper{
+		send: s,
+		req:  NewMessage(),
+		res:  NewMessage(),
+		err:  nil,
+	}
 }
 
 func (r *ReqHelper) Method(method string) *ReqHelper {
@@ -130,38 +118,46 @@ func (r *ReqHelper) Url(url string) *ReqHelper {
 	return r
 }
 
-func (r *ReqHelper) Buf(buf []byte) *ReqHelper {
-	r.buf = buf
+func (r *ReqHelper) Event(event int) *ReqHelper {
+	r.req.Event = event
 	return r
 }
 
-func (r *ReqHelper) StructRequest(strct interface{}) *ReqHelper {
-	r.structRequest = strct
+func (r *ReqHelper) Context(ctx map[string]string) *ReqHelper {
+	r.req.Context = ctx
 	return r
 }
 
-func (r *ReqHelper) StructResponse(strct interface{}) *ReqHelper {
-	r.structResponse = strct
-	return r
+func (r *ReqHelper) Send() (*ReqHelper, error) {
+	err := r.send.send(r)
+	return r, err
 }
 
-func (r *ReqHelper) Send() (interface{}, error) {
-	return r.send.send(r)
+func NewMessage() *Message {
+	return &Message{
+		Context: make(map[string]string),
+	}
 }
 
-type Request struct {
-	Type        int               `json:"type"` // question or answer
-	Method      int               `json:"method"`
-	TimeSendReq int64             `json:"timesendreq"`
-	TimeMyShift int64             `json:"timemyshift"`
-	Context     map[string]string `json:"context"`
+type Message struct {
+	Stamp   Stamp             `json:"stamp"`
+	Event   int               `json:"event"`
+	Context map[string]string `json:"context"`
 }
 
-type Response struct {
-	Status      int               `json:"status"`
-	TimeSendReq int64             `json:"timesendreq"`
-	TimeRecdReq int64             `json:"timerecdreq"`
-	TimeSendRes int64             `json:"timesendres"`
-	TimeMyShift int64             `json:"timemyshift"`
-	Context     map[string]string `json:"context"`
+func (r *Message) getDataForVerification() string {
+	data := strconv.FormatInt(r.Stamp.EntryTime, 10)
+	data += strconv.FormatInt(r.Stamp.ExitTime, 10)
+	for k, v := range r.Context {
+		data = data + k + v
+	}
+	return data
+}
+
+type Stamp struct {
+	From      string `json:"from"`
+	EntryTime int64  `json:"entry"`
+	ExitTime  int64  `json:"exit"`
+	R10       string `json:"r10"`
+	S10       string `json:"s10"`
 }

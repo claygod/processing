@@ -13,8 +13,6 @@ import (
 	"unsafe"
 )
 
-const defaultBlockSize int = 128 // 120 + alignment
-
 /*
 Account - keeps a balance.
 */

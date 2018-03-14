@@ -79,6 +79,21 @@ func (c *Crypto) genNewKeys() ([]byte, []byte) {
 	return pvt_key_bytes, pub_key_bytes
 }
 
+func (c *Crypto) sign(str []byte) (*big.Int, *big.Int, error) {
+	zero := big.NewInt(0)
+	pvt_key, err := x509.ParseECPrivateKey(c.pvtKey.key())
+	if err != nil {
+		return zero, zero, err
+	}
+
+	r, s, err := ecdsa.Sign(rand.Reader, pvt_key, str)
+	if err != nil {
+		return zero, zero, err
+	}
+	return r, s, nil
+}
+
+/*
 func (c *Crypto) sign(str []byte, pvt_key_bytes []byte) (*big.Int, *big.Int, error) {
 	zero := big.NewInt(0)
 	pvt_key, err := x509.ParseECPrivateKey(pvt_key_bytes)
@@ -92,6 +107,7 @@ func (c *Crypto) sign(str []byte, pvt_key_bytes []byte) (*big.Int, *big.Int, err
 	}
 	return r, s, nil
 }
+*/
 
 func (c *Crypto) verify(str []byte, pub_key_bytes []byte, r *big.Int, s *big.Int) bool {
 	pub_key, err := x509.ParsePKIXPublicKey(pub_key_bytes)
