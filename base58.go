@@ -9,14 +9,14 @@ import (
 	"math/big"
 )
 
-type base58 struct {
+type Base58 struct {
 	alphabet  [58]byte
 	decodeMap [256]int64
 }
 
-func NewBase58() *base58 {
+func NewBase58() *Base58 {
 
-	enc := &base58{}
+	enc := &Base58{}
 	copy(enc.alphabet[:], []byte(alphabet)[:])
 	for i := range enc.decodeMap {
 		enc.decodeMap[i] = -1
@@ -27,14 +27,26 @@ func NewBase58() *base58 {
 	return enc
 }
 
+func (b58 *Base58) Encode(key []byte) string {
+	n := new(big.Int).SetBytes(key)
+	addr, _ := b58.encodeNumber(n.String())
+	return string(addr)
+}
+
+func (b58 *Base58) Decode(key string) []byte {
+	addr, _ := b58.decodeBites([]byte(key))
+	n, _ := new(big.Int).SetString(string(addr), 10)
+	return n.Bytes()
+}
+
 func reverse(data []byte) {
 	for i, j := 0, len(data)-1; i < j; i, j = i+1, j-1 {
 		data[i], data[j] = data[j], data[i]
 	}
 }
 
-// Encode - encodes the number represented in the byte array base 10.
-func (b58 *base58) Encode(src string) ([]byte, error) {
+// encodeNumber - encodes the number represented in the byte array base 10.
+func (b58 *Base58) encodeNumber(src string) ([]byte, error) {
 	if len(src) == 0 {
 		return []byte{}, nil
 	}
@@ -67,8 +79,8 @@ func (b58 *base58) Encode(src string) ([]byte, error) {
 	}
 }
 
-// Decode - decodes the base58 encoded bytes.
-func (b58 *base58) Decode(src []byte) ([]byte, error) {
+// decodeBites - decodes the base58 encoded bytes.
+func (b58 *Base58) decodeBites(src []byte) ([]byte, error) {
 	if len(src) == 0 {
 		return []byte{}, nil
 	}

@@ -9,7 +9,7 @@ import (
 )
 
 type example struct {
-	coder  *base58
+	coder  *Base58
 	tpairs []pair
 }
 
@@ -37,7 +37,7 @@ var examples = []example{
 func TestBase58Encode(t *testing.T) {
 	for _, example := range examples {
 		for _, pair := range example.tpairs {
-			got, err := example.coder.Encode(pair.decoded)
+			got, err := example.coder.encodeNumber(pair.decoded)
 			if err != nil {
 				t.Errorf("Error occurred while encoding %s.", pair.decoded)
 			}
@@ -51,7 +51,7 @@ func TestBase58Encode(t *testing.T) {
 func TestBase58Decode(t *testing.T) {
 	for _, example := range examples {
 		for _, pair := range example.tpairs {
-			got, err := example.coder.Decode([]byte(pair.encoded))
+			got, err := example.coder.decodeBites([]byte(pair.encoded))
 			if err != nil {
 				t.Errorf("Error occurred while decoding %s.", pair.encoded)
 			}
@@ -66,7 +66,7 @@ func BenchmarkBase58Encode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for _, example := range examples {
 			for _, pair := range example.tpairs {
-				_, _ = example.coder.Encode(pair.decoded)
+				_, _ = example.coder.encodeNumber(pair.decoded)
 			}
 		}
 	}
@@ -76,7 +76,7 @@ func BenchmarkBase58Decode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for _, example := range examples {
 			for _, pair := range example.tpairs {
-				_, _ = example.coder.Decode([]byte(pair.encoded))
+				_, _ = example.coder.decodeBites([]byte(pair.encoded))
 			}
 		}
 	}

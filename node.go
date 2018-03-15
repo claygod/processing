@@ -24,18 +24,28 @@ type Node struct {
 	authorities map[string]*Group
 	auths       *Group
 	accounts    map[string]*Account
+	ids         map[string]*Id
 	flags       map[string]*int32
+	cripto      *Crypto
 }
 
 /*
 NewNode - create new Node.
 */
 func NewNode(address string, path string) (*Node, error) {
+	cr, err := NewCrypto()
+	if err != nil {
+		return nil, err
+	}
+
 	n := &Node{
 		authorities: make(map[string]*Group),
 		accounts:    make(map[string]*Account),
 		auths:       NewGroup(),
+		ids:         make(map[string]*Id),
+		cripto:      cr,
 	}
+
 	if err := n.loadAuthList(path); err != nil {
 		return nil, err
 	}
@@ -67,13 +77,14 @@ func (n *Node) loadAuthList(path string) error {
 
 	for _, a := range authSlice {
 		if a.Url != "" &&
-			a.PubKey64 != "" &&
+			a.PubKey != "" &&
 			len(a.Groups) != 0 { // Filtering out incorrect entries
-			pubKey, err := base64.StdEncoding.DecodeString(a.PubKey64)
+			pubKey, err := base64.StdEncoding.DecodeString(a.PubKey)
 			if err != nil {
 				continue
 			}
-			address := PubKeyToAddress(pubKey)
+			address := n.cripto.PubKeyToAddress(pubKey)
+
 			// fmt.Println("===", address)
 			n.auths.Store(address, &a)
 			for _, gName := range a.Groups {

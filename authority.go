@@ -11,7 +11,7 @@ Authority - an important node in the network.
 */
 type Authority struct {
 	Id         *Id
-	PubKey64   string   `json:"pub_key_64"`
+	PubKey     string   `json:"pub_key"`
 	Url        string   `json:"url"`
 	Groups     []string `json:"groups_list"`
 	Status     int64

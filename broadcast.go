@@ -36,7 +36,8 @@ func (b *Broadcast) Dispatch(groups []*Group, rh *ReqHelper) (map[string]*ReqHel
 	for k, a := range list {
 		// ToDo: менять ли r,s для каждого ? Нет, накладно пожалуй...
 		rh.req.Stamp.ExitTime = time.Now().Unix()
-		rh, err := rh.Url(a.Url).Send() // b.send.send(req)
+		rh.to = a
+		rh, err := rh.Send() // b.send.send(req)
 		if err != nil {
 			listErr[k] = rh
 		} else {

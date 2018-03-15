@@ -44,3 +44,15 @@ const (
 */
 
 const timeDurationTimeout time.Duration = 10 * time.Second
+
+// No error code
+const (
+	StatusOk int = 200
+)
+
+// Error status codes
+const (
+	ErrorFillStamp int = 700 + iota
+	ErrorNewHttp
+	ErrorAnswerVerification
+)

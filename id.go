@@ -15,9 +15,9 @@ type Id struct {
 /*
 NewId - create new Id.
 */
-func NewId(pubKey []byte) *Id {
+func NewId(address string, pubKey []byte) *Id {
 	i := &Id{
-		address: PubKeyToAddress(pubKey),
+		address: address,
 		pubKey:  pubKey,
 	}
 	return i

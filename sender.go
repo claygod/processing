@@ -7,7 +7,9 @@ package processing
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"math/big"
 	"net/http"
 	"strconv"
 )
@@ -34,14 +36,17 @@ func (s *Sender) Request() *ReqHelper {
 
 // send - sending request
 func (s *Sender) send(rh *ReqHelper) error {
+	rh.status = StatusOk
 	if err := s.fillStamp(&rh.req.Stamp, rh.req); err != nil {
 		rh.err = err
+		rh.status = ErrorFillStamp
 		return err
 	}
 
 	client, r, err := s.newHttp(rh)
 	if err != nil {
 		rh.err = err
+		rh.status = ErrorNewHttp
 		return err
 	}
 
@@ -49,6 +54,7 @@ func (s *Sender) send(rh *ReqHelper) error {
 	if err != nil {
 		err2 := fmt.Errorf("Response status: `%s`. %v", resp.Status, err)
 		rh.err = err2
+		rh.status = resp.StatusCode
 		return err2
 	}
 	defer resp.Body.Close()
@@ -58,7 +64,13 @@ func (s *Sender) send(rh *ReqHelper) error {
 	if err != nil {
 		err2 := fmt.Errorf("Response status: `%s`. %v", resp.Status, err)
 		rh.err = err2
+		rh.status = resp.StatusCode
 		return err2
+	}
+
+	if !s.checkStamp(rh.res, rh.to.PubKey) {
+		rh.status = ErrorAnswerVerification
+		return errors.New("The answer did not pass the verification.")
 	}
 
 	return nil
@@ -70,7 +82,7 @@ func (s *Sender) newHttp(rh *ReqHelper) (*http.Client, *http.Request, error) {
 		return nil, nil, err
 	}
 
-	r, err := http.NewRequest(rh.method, rh.url, bytes.NewBuffer(qJson))
+	r, err := http.NewRequest(rh.method, rh.to.Url, bytes.NewBuffer(qJson))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -81,7 +93,7 @@ func (s *Sender) newHttp(rh *ReqHelper) (*http.Client, *http.Request, error) {
 
 func (s *Sender) fillStamp(st *Stamp, msg *Message) error {
 	st.From = s.crypto.address
-	rr, ss, err := s.crypto.sign([]byte(msg.getDataForVerification()))
+	rr, ss, err := s.crypto.sign([]byte(msg.dataForVerification()))
 	if err != nil {
 		return err
 	}
@@ -90,31 +102,48 @@ func (s *Sender) fillStamp(st *Stamp, msg *Message) error {
 	return nil
 }
 
+func (s *Sender) checkStamp(msg *Message, pubKey string) bool {
+	rr, ok := new(big.Int).SetString(msg.Stamp.R10, 10)
+	if !ok {
+		return false
+	}
+	ss, ok := new(big.Int).SetString(msg.Stamp.S10, 10)
+	if !ok {
+		return false
+	}
+
+	return s.crypto.verify(
+		[]byte(msg.dataForVerification()),
+		[]byte(pubKey),
+		rr, ss)
+}
+
 type ReqHelper struct {
 	send   *Sender
+	to     *Authority
 	method string
-	url    string
 	req    *Message
 	res    *Message
 	err    error
+	status int
 }
 
 func NewReqHelper(s *Sender) *ReqHelper {
 	return &ReqHelper{
 		send: s,
 		req:  NewMessage(),
-		res:  NewMessage(),
+		res:  NewMessage(), // ToDo: To initiate or not?
 		err:  nil,
 	}
 }
 
-func (r *ReqHelper) Method(method string) *ReqHelper {
-	r.method = method
+func (r *ReqHelper) To(a *Authority) *ReqHelper {
+	r.to = a
 	return r
 }
 
-func (r *ReqHelper) Url(url string) *ReqHelper {
-	r.url = url
+func (r *ReqHelper) Method(method string) *ReqHelper {
+	r.method = method
 	return r
 }
 
@@ -145,7 +174,7 @@ type Message struct {
 	Context map[string]string `json:"context"`
 }
 
-func (r *Message) getDataForVerification() string {
+func (r *Message) dataForVerification() string {
 	data := strconv.FormatInt(r.Stamp.EntryTime, 10)
 	data += strconv.FormatInt(r.Stamp.ExitTime, 10)
 	for k, v := range r.Context {

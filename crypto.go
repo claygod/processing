@@ -30,6 +30,7 @@ type Crypto struct {
 	pubKey  []byte
 	pvtKey  *keyBox
 	address string
+	b58     *Base58
 }
 
 /*
@@ -38,6 +39,7 @@ NewCrypto - create new Crypto.
 func NewCrypto() (*Crypto, error) {
 	c := &Crypto{
 		pubKey: make([]byte, 0),
+		b58:    NewBase58(),
 	}
 	pubKey, pvtKey := c.genNewKeys()
 	kb, err := newKeyBox(pvtKey)
@@ -47,29 +49,16 @@ func NewCrypto() (*Crypto, error) {
 	}
 	c.pubKey = pubKey
 	c.pvtKey = kb
-	// fmt.Println("--pvtKey---", pvtKey)
 	sh1 := sha256.Sum256(pubKey)
 	sh := sha256.Sum256(sh1[:])
-	//c.address = base64.StdEncoding.EncodeToString(sh[0:32])
-
-	n := new(big.Int).SetBytes(sh[0:32])
-	addr, _ := NewBase58().Encode(n.String())
-	c.address = string(addr)
-	//tsh := []byte{0x00}
-	//tsh = append(tsh, sh1[:]...)
-	//fmt.Println(string(tsh))
-	//fmt.Println(tsh)
-	//fmt.Println("----------")
-
+	c.address = c.b58.Encode(sh[0:32])
 	return c, nil
 }
 
-func PubKeyToAddress(pubKey []byte) string {
+func (c *Crypto) PubKeyToAddress(pubKey []byte) string {
 	sh1 := sha256.Sum256(pubKey)
 	sh2 := sha256.Sum256(sh1[:])
-	n := new(big.Int).SetBytes(sh2[0:32])
-	addr, _ := NewBase58().Encode(n.String())
-	return string(addr)
+	return c.b58.Encode(sh2[0:32])
 }
 
 func (c *Crypto) genNewKeys() ([]byte, []byte) {
@@ -92,22 +81,6 @@ func (c *Crypto) sign(str []byte) (*big.Int, *big.Int, error) {
 	}
 	return r, s, nil
 }
-
-/*
-func (c *Crypto) sign(str []byte, pvt_key_bytes []byte) (*big.Int, *big.Int, error) {
-	zero := big.NewInt(0)
-	pvt_key, err := x509.ParseECPrivateKey(pvt_key_bytes)
-	if err != nil {
-		return zero, zero, err
-	}
-
-	r, s, err := ecdsa.Sign(rand.Reader, pvt_key, str)
-	if err != nil {
-		return zero, zero, err
-	}
-	return r, s, nil
-}
-*/
 
 func (c *Crypto) verify(str []byte, pub_key_bytes []byte, r *big.Int, s *big.Int) bool {
 	pub_key, err := x509.ParsePKIXPublicKey(pub_key_bytes)
