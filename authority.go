@@ -4,7 +4,10 @@ package processing
 // Authority
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
-import "time"
+import (
+	"net/url"
+	"time"
+)
 
 /*
 Authority - an important node in the network.
@@ -17,6 +20,7 @@ type Authority struct {
 	Status     int64
 	lastUpdate int64
 	timeShift  int64
+	urlNet     *url.URL
 }
 
 /*

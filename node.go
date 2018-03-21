@@ -12,6 +12,7 @@ import (
 	"runtime"
 	// "sync"
 	"encoding/base64"
+	"net/url"
 	"sync/atomic"
 	"time"
 )
@@ -81,9 +82,15 @@ func (n *Node) loadAuthList(path string) error {
 			len(a.Groups) != 0 { // Filtering out incorrect entries
 			pubKey, err := base64.StdEncoding.DecodeString(a.PubKey)
 			if err != nil {
-				continue
+				continue // ToDo: log OR return err
 			}
 			address := n.cripto.PubKeyToAddress(pubKey)
+
+			urlNet, err := url.ParseRequestURI(a.Url)
+			if err != nil {
+				continue // ToDo: log OR return err
+			}
+			a.urlNet = urlNet
 
 			// fmt.Println("===", address)
 			n.auths.Store(address, &a)
