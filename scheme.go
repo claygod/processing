@@ -51,7 +51,7 @@ func (s *Scheme) GetNumsToSend(offset int) ([]int, error) {
 				if n > s.authsCount {
 					n -= s.authsCount
 				}
-				nums = append(nums, n) // !!
+				nums = append(nums, n)
 			}
 		}
 	}
