@@ -7,53 +7,37 @@ package processing
 import (
 	"errors"
 	"fmt"
-	"sync"
 )
 
 /*
 Scheme - message distribution scheme.
 */
 type Scheme struct {
-	sync.RWMutex
 	authsCount   int
 	myPosition   int
 	mailingWidth int
-	list         []*Authority
 }
 
 /*
 NewScheme - create new Scheme.
 */
-func NewScheme(auths []*Authority, my *Authority, mailingWidth int) (*Scheme, error) {
-	list := make([]*Authority, len(auths)*2)
-	copy(list, auths)
-	copy(list, auths)
-
-	p := -1
-	for k, a := range list {
-		if a == my {
-			p = k
-			break
-		}
+func NewScheme(authsCount int, myPosition int, mailingWidth int) (*Scheme, error) {
+	if authsCount <= myPosition {
+		return nil, errors.New("The position is outside the list")
 	}
-	if p == -1 {
-		return nil, errors.New("Your own link was not found")
-	}
-
 	return &Scheme{
-		authsCount:   len(auths),
-		myPosition:   p,
+		authsCount:   authsCount,
+		myPosition:   myPosition,
 		mailingWidth: mailingWidth,
-		list:         list,
 	}, nil
 }
 
-func (s *Scheme) GetListToSend(offset int, step int) ([]*Authority, error) {
+func (s *Scheme) GetNumsToSend(offset int) ([]int, error) {
 	if offset >= s.authsCount {
 		return nil, fmt.Errorf("Offset %d more authorities available (%d)", offset, s.authsCount)
 	}
 
-	auths := make([]*Authority, 0, s.mailingWidth)
+	nums := make([]int, 0, s.mailingWidth)
 	position := s.myPosition + offset
 	if position >= s.authsCount {
 		position -= s.authsCount
@@ -63,10 +47,14 @@ func (s *Scheme) GetListToSend(offset int, step int) ([]*Authority, error) {
 	if base < s.authsCount {
 		for i := base; i < base+s.mailingWidth; i++ {
 			if i < s.authsCount {
-				auths = append(auths, s.list[i+offset]) // !!
+				n := i // + offset
+				if n > s.authsCount {
+					n -= s.authsCount
+				}
+				nums = append(nums, n) // !!
 			}
 		}
 	}
 
-	return auths, nil
+	return nums, nil
 }

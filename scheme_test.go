@@ -9,36 +9,192 @@ import (
 	"testing"
 )
 
-func TestSchemeListsLen(t *testing.T) { //t.Errorf("Encode(%s) = %s, want %s", string(got), pair.encoded)
-	auths := make([]*Authority, 5, 5)
-
-	s, err := NewScheme(auths, auths[0], 16)
+func TestSchemeGetNumsToSend_Off_0(t *testing.T) { //t.Errorf("Encode(%s) = %s, want %s", string(got), pair.encoded)
+	authsCount := 7
+	myPosition := 0
+	mailingWidth := 2
+	s, err := NewScheme(authsCount, myPosition, mailingWidth)
 
 	if err != nil {
 		t.Error(err)
 	}
+	offset := 0
 
-	if len(s.list) != 10 {
-		t.Error("Incorrect value len(s.list)")
+	listResult, err := s.GetNumsToSend(offset)
+	if err != nil {
+		t.Error(err)
 	}
-	//fmt.Println("pvtkey: ", c.pvtKey.key())
-	//fmt.Println("pubkey: ", c.pubKey)
-
+	listTrue := []int{2, 3}
+	if len(listResult) != len(listTrue) {
+		t.Errorf("Do not match lengths listResult = %d, listTrue = %d", len(listResult), len(listTrue))
+	} else {
+		for i, _ := range listTrue {
+			if listResult[i] != listTrue[i] {
+				t.Errorf("In position [%d] result = %d, want %d", i, listResult[i], listTrue[i])
+			}
+		}
+	}
 }
 
-func TestSchemeGet(t *testing.T) { //t.Errorf("Encode(%s) = %s, want %s", string(got), pair.encoded)
-	auths := make([]*Authority, 0, 51)
-	for i := 0; i < 51; i++ {
-		a := &Authority{}
-		a.lastUpdate = int64(i)
-		auths = append(auths, a)
-	}
-
-	s, err := NewScheme(auths, auths[0], 3)
+func TestSchemeGet_Count32_Pos5_Width2_Off0(t *testing.T) { //t.Errorf("Encode(%s) = %s, want %s", string(got), pair.encoded)
+	authsCount := 32
+	myPosition := 5
+	mailingWidth := 2
+	s, err := NewScheme(authsCount, myPosition, mailingWidth)
 
 	if err != nil {
 		t.Error(err)
 	}
-	s.GetListToSend(0, 0)
+	offset := 0
+
+	listResult, err := s.GetNumsToSend(offset)
+	if err != nil {
+		t.Error(err)
+	}
+	listTrue := []int{12, 13}
+	if len(listResult) != len(listTrue) {
+		t.Errorf("Do not match lengths listResult = %d, listTrue = %d", len(listResult), len(listTrue))
+	} else {
+		for i, _ := range listTrue {
+			if listResult[i] != listTrue[i] {
+				t.Errorf("In position [%d] result = %d, want %d", i, listResult[i], listTrue[i])
+			}
+		}
+	}
+}
+
+func TestSchemeGet_Count32_Pos5_Width2_Off3(t *testing.T) { //t.Errorf("Encode(%s) = %s, want %s", string(got), pair.encoded)
+	authsCount := 32
+	myPosition := 5
+	mailingWidth := 2
+	s, err := NewScheme(authsCount, myPosition, mailingWidth)
+
+	if err != nil {
+		t.Error(err)
+	}
+	offset := 3
+
+	listResult, err := s.GetNumsToSend(offset)
+	if err != nil {
+		t.Error(err)
+	}
+	listTrue := []int{18, 19}
+	if len(listResult) != len(listTrue) {
+		t.Errorf("Do not match lengths listResult = %d, listTrue = %d", len(listResult), len(listTrue))
+	} else {
+		for i, _ := range listTrue {
+			if listResult[i] != listTrue[i] {
+				t.Errorf("In position [%d] result = %d, want %d", i, listResult[i], listTrue[i])
+			}
+		}
+	}
+}
+
+func TestSchemeGet_Count43_Pos19_Width2_Off0(t *testing.T) { //t.Errorf("Encode(%s) = %s, want %s", string(got), pair.encoded)
+	authsCount := 43
+	myPosition := 19
+	mailingWidth := 2
+	s, err := NewScheme(authsCount, myPosition, mailingWidth)
+
+	if err != nil {
+		t.Error(err)
+	}
+	offset := 0
+
+	listResult, err := s.GetNumsToSend(offset)
+	if err != nil {
+		t.Error(err)
+	}
+	listTrue := []int{40, 41}
+	if len(listResult) != len(listTrue) {
+		t.Errorf("Do not match lengths listResult = %d, listTrue = %d", len(listResult), len(listTrue))
+	} else {
+		for i, _ := range listTrue {
+			if listResult[i] != listTrue[i] {
+				t.Errorf("In position [%d] result = %d, want %d", i, listResult[i], listTrue[i])
+			}
+		}
+	}
+}
+
+func TestSchemeGet_Count43_Pos19_Width2_Off1(t *testing.T) { //t.Errorf("Encode(%s) = %s, want %s", string(got), pair.encoded)
+	authsCount := 43
+	myPosition := 19
+	mailingWidth := 2
+	s, err := NewScheme(authsCount, myPosition, mailingWidth)
+
+	if err != nil {
+		t.Error(err)
+	}
+	offset := 1
+
+	listResult, err := s.GetNumsToSend(offset)
+	if err != nil {
+		t.Error(err)
+	}
+	listTrue := []int{42}
+	if len(listResult) != len(listTrue) {
+		t.Errorf("Do not match lengths listResult = %d, listTrue = %d", len(listResult), len(listTrue))
+	} else {
+		for i, _ := range listTrue {
+			if listResult[i] != listTrue[i] {
+				t.Errorf("In position [%d] result = %d, want %d", i, listResult[i], listTrue[i])
+			}
+		}
+	}
+}
+
+func TestSchemeGet_Count21_Pos0_Width16_Off0(t *testing.T) { //t.Errorf("Encode(%s) = %s, want %s", string(got), pair.encoded)
+	authsCount := 21
+	myPosition := 0
+	mailingWidth := 16
+	s, err := NewScheme(authsCount, myPosition, mailingWidth)
+
+	if err != nil {
+		t.Error(err)
+	}
+	offset := 0
+
+	listResult, err := s.GetNumsToSend(offset)
+	if err != nil {
+		t.Error(err)
+	}
+	listTrue := []int{16, 17, 18, 19, 20}
+	if len(listResult) != len(listTrue) {
+		t.Errorf("Do not match lengths listResult = %d, listTrue = %d", len(listResult), len(listTrue))
+	} else {
+		for i, _ := range listTrue {
+			if listResult[i] != listTrue[i] {
+				t.Errorf("In position [%d] result = %d, want %d", i, listResult[i], listTrue[i])
+			}
+		}
+	}
+}
+
+func TestSchemeGet_Count15_Pos0_Width16_Off0(t *testing.T) { //t.Errorf("Encode(%s) = %s, want %s", string(got), pair.encoded)
+	authsCount := 15
+	myPosition := 0
+	mailingWidth := 16
+	s, err := NewScheme(authsCount, myPosition, mailingWidth)
+
+	if err != nil {
+		t.Error(err)
+	}
+	offset := 0
+
+	listResult, err := s.GetNumsToSend(offset)
+	if err != nil {
+		t.Error(err)
+	}
+	listTrue := []int{}
+	if len(listResult) != len(listTrue) {
+		t.Errorf("Do not match lengths listResult = %d, listTrue = %d", len(listResult), len(listTrue))
+	} else {
+		for i, _ := range listTrue {
+			if listResult[i] != listTrue[i] {
+				t.Errorf("In position [%d] result = %d, want %d", i, listResult[i], listTrue[i])
+			}
+		}
+	}
 
 }
