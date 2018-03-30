@@ -21,6 +21,10 @@ type Node struct {
 	ids         map[string]*Id
 	flags       map[string]*int32
 	cripto      *Crypto
+
+	// transit // отправленные sent // transfer
+	// accounts // head block // intermediate block // tail block
+	// resources // head block // intermediate block // tail block
 }
 
 /*
