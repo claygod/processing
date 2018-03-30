@@ -5,10 +5,17 @@ package processing
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 /*
+Resources - an important node in the network.
+*/
+type Resources struct {
+	arr map[int]*Resource
+}
+
+/*
 Resource - an important node in the network.
 */
 type Resource struct {
-	id   int64
+	id   int
 	name string
 }
 

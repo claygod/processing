@@ -49,9 +49,7 @@ func NewCrypto() (*Crypto, error) {
 	}
 	c.pubKey = pubKey
 	c.pvtKey = kb
-	// sh1 := sha256.Sum256(pubKey)
-	// sh := sha256.Sum256(sh1[:])
-	c.address = c.PubKeyToAddress(pubKey) //c.b58.Encode(sh[0:32])
+	c.address = c.b58.Encode(pubKey)
 	return c, nil
 }
 
