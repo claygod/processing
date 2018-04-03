@@ -1,7 +1,7 @@
 # processing
 
 Blockchain-like decentralized distributed DAG-registry for processing.
-Consensus algorithm: PoA (Proof-of-Authority) , PoW (Proof-of-work).
+Consensus algorithms: PoA (Proof-of-Authority) , PoW (Proof-of-work).
 
 Proof-of-authority (PoA) is an algorithm used with blockchains that delivers comparatively fast transactions through a consensus mechanism based on identity as a stake.
 
