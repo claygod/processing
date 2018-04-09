@@ -15,9 +15,10 @@ import (
 Provider - inputs and outputs resources from the network.
 */
 type Provider struct {
-	token   entities.Token
-	limit   int64 // максимум, сколько можно вводить в систему
-	counter int64 // сколько введено в систему
+	token    entities.Token
+	resource entities.Resource
+	limit    int64 // максимум, сколько можно вводить в систему
+	counter  int64 // сколько введено в систему
 }
 
 /*
