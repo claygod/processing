@@ -32,8 +32,6 @@ Block - contains a resource and restrictions on its use.
 Комиссия в размере процента (малого) но не меньше 1 единицы.
 */
 type Block struct {
-	//ResourceId   int
-	//Amount       int
 	OwnerAddress string
 	State        ExhangeBlock // параметры блока (ресурс и его величина)
 	Condition    ExhangeBlock
