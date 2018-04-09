@@ -38,7 +38,7 @@ func NewTransaction(initiator string, broker string) *Transaction {
 }
 
 /*
-marshalling - preparation of data for hashing
+marshalling - preparation of data for hashing.
 */
 func (t *Transaction) marshalling() ([]byte, error) {
 	t.R = []byte{}
@@ -63,7 +63,8 @@ func (b *Transaction) sortBlocks() {
 
 /*
 checkSums - checking the sum of inputs and outputs.
-*/
+
 func (b *Transaction) checkSums() {
 
 }
+*/

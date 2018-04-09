@@ -1,4 +1,4 @@
-package processing
+package scripts
 
 // Processing
 // Provider
@@ -7,13 +7,15 @@ package processing
 import (
 	"runtime"
 	"sync/atomic"
+
+	"github.com/claygod/processing/entities"
 )
 
 /*
 Provider - inputs and outputs resources from the network.
 */
 type Provider struct {
-	id      *Id
+	token   entities.Token
 	limit   int64 // максимум, сколько можно вводить в систему
 	counter int64 // сколько введено в систему
 }
@@ -21,9 +23,9 @@ type Provider struct {
 /*
 NewProvider - create new Provider.
 */
-func NewProvider(id *Id) *Provider {
+func NewProvider(id entities.Token) *Provider {
 	r := &Provider{
-		id: id,
+		token: id,
 	}
 	return r
 }
