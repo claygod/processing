@@ -15,10 +15,10 @@ type Token struct {
 /*
 NewToken - create new Token.
 */
-func NewToken(pubKey []byte, enc Encoder) *Token {
-	i := &Token{
-		Address: enc.Encode(pubKey),
+func NewToken(address string, pubKey []byte) Token {
+	t := Token{
+		Address: address,
 		PubKey:  pubKey,
 	}
-	return i
+	return t
 }

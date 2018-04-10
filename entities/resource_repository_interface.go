@@ -6,10 +6,10 @@ package entities
 
 /*
 ResourceRepository - storage token interface.
+This repository is not allowed to delete entities!
 */
 type ResourceRepository interface {
 	Create(string) (int, error)
-	Read(string) (Resource, error) // by address
-	GetNameById(string)
-	Delete(string) error
+	Read(int) (Resource, error)
+	// List () []Resource
 }

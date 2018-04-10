@@ -6,9 +6,10 @@ package entities
 
 /*
 TokenRepository - storage token interface.
+This repository is not allowed to delete entities!
 */
 type TokenRepository interface {
-	Create([]byte) error
+	Create([]byte) (string, error)
 	Read(string) (Token, error) // by address
-	// Delete(string) error // токены не удаляются никогда!
+	List() []Token
 }
