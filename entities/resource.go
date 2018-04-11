@@ -15,8 +15,8 @@ type Resource struct {
 /*
 NewResource - create new Resource.
 */
-func NewResource(name string, id int) *Resource {
-	r := &Resource{
+func NewResource(name string, id int) Resource {
+	r := Resource{
 		id:   id,
 		name: name,
 	}
