@@ -12,7 +12,7 @@ import (
 	//"crypto/hmac"
 	"crypto/rand"
 	//"crypto/sha1"
-	"crypto/sha256"
+	//"crypto/sha256"
 	"crypto/x509"
 	//"encoding/base64"
 	//"encoding/hex"
@@ -57,13 +57,14 @@ func NewCrypto(pubKey []byte, pvtKey []byte, enc entities.Encoder) (*Crypto, err
 	return c, nil
 }
 
+/*
 func (c *Crypto) Address(pubKey []byte) string {
 	sh1 := sha256.Sum256(pubKey)
 	sh2 := sha256.Sum256(sh1[:])
 	return c.encoder.Encode(sh2[0:32]) //c.b58.Encode(sh2[0:32])
 }
 
-/*
+
 func (c *Crypto) genNewKeys() ([]byte, []byte) {
 	pvt_key, _ := ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
 	pvt_key_bytes, _ := x509.MarshalECPrivateKey(pvt_key)

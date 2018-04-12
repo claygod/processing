@@ -5,6 +5,7 @@ package services
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"math/big"
 )
@@ -39,6 +40,12 @@ func (b58 *Base58) Decode(key string) []byte {
 	addr, _ := b58.decodeBites([]byte(key))
 	n, _ := new(big.Int).SetString(string(addr), 10)
 	return n.Bytes()
+}
+
+func (b58 *Base58) Address(key []byte) string {
+	sh1 := sha256.Sum256(key)
+	sh2 := sha256.Sum256(sh1[:])
+	return b58.Encode(sh2[0:32])
 }
 
 func reverse(data []byte) {
