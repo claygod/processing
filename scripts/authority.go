@@ -5,29 +5,31 @@ package scripts
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 import (
-	"net/url"
+	"sync/atomic"
 
 	"github.com/claygod/processing/entities"
-	// "time"
 )
 
 /*
 Authority - an important node in the network.
 */
 type Authority struct {
-	Token entities.Token
-	// PubKey     string `json:"pub_key"`
-	Url        string `json:"url"`
-	Status     int64
-	lastUpdate int64
-	timeShift  int64
-	urlNet     *url.URL
+	Token  entities.Token
+	Link   string `json:"url"`
+	Status int64
 }
 
 /*
-func (a *Authority) CheckStatus() { // ToDo: the "method" mov to Node
-	// Ping
-	a.Status = time.Now().Unix()
-	//a.timeShift = xx
-}
+NewAuthority - create new Authority.
 */
+func NewAuthority(token entities.Token, link string) Authority {
+	a := Authority{
+		Token: token,
+		Link:  link,
+	}
+	return a
+}
+
+func (a *Authority) StatusAdd(amount int64) int64 { // ToDo: the "method" mov to Node
+	return atomic.AddInt64(&a.Status, amount)
+}

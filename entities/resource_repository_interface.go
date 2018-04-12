@@ -11,5 +11,5 @@ This repository is not allowed to delete entities!
 type ResourceRepository interface {
 	Create(string) (int, error)
 	Read(int) (Resource, error)
-	// List () []Resource
+	List() []Resource
 }
