@@ -5,8 +5,17 @@ package scripts
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 import (
+	"fmt"
 	"strconv"
 )
+
+type Message struct {
+	From     string `json:"from"`
+	Offset   int    `json:"offset"`
+	SentTime int64  `json:"sent_time"`
+	Body     []byte `json:"body"`
+	Hash     string
+}
 
 func NewMessage(from string, offset int, sentTime int64, body []byte) *Message {
 	return &Message{
@@ -15,13 +24,6 @@ func NewMessage(from string, offset int, sentTime int64, body []byte) *Message {
 		SentTime: sentTime,
 		Body:     body,
 	}
-}
-
-type Message struct {
-	From     string `json:"from"`
-	Offset   int    `json:"offset"`
-	SentTime int64  `json:"sent_time"`
-	Body     []byte `json:"body"`
 }
 
 func (m *Message) dataForVerification() []byte {
@@ -39,6 +41,16 @@ type Parcel struct {
 	Messages []*Message
 	R10      string `json:"r10"`
 	S10      string `json:"s10"`
+}
+
+func (p *Parcel) AddMessage(msg *Message) error {
+	for _, m := range p.Messages {
+		if m.Hash == msg.Hash {
+			return fmt.Errorf("Message with hash %s already added.", msg.Hash)
+		}
+	}
+	p.Messages = append(p.Messages, msg)
+	return nil
 }
 
 func (p *Parcel) dataForVerification() []byte {
