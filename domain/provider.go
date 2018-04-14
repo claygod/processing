@@ -1,4 +1,4 @@
-package scripts
+package domain
 
 // Processing
 // Provider
@@ -15,7 +15,7 @@ import (
 Provider - inputs and outputs resources from the network.
 */
 type Provider struct {
-	account    entities.Account
+	account  entities.Account
 	resource entities.Resource
 	limit    int64 // максимум, сколько можно вводить в систему
 	counter  int64 // сколько введено в систему

@@ -1,24 +1,24 @@
 package entities
 
 // Processing
-// Token
+// Account
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 /*
-Token - identifier.
+Account - identifier.
 */
-type Token struct {
+type Account struct {
 	Address string
 	PubKey  []byte
 }
 
 /*
-NewToken - create new Token.
+NewAccount - create new Account.
 */
-func NewToken(address string, pubKey []byte) Token {
-	t := Token{
+func NewAccount(address string, pubKey []byte) Account {
+	a := Account{
 		Address: address,
 		PubKey:  pubKey,
 	}
-	return t
+	return a
 }

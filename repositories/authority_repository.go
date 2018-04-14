@@ -20,7 +20,7 @@ This repository is not allowed to delete scripts!
 */
 type AuthorityRepository struct {
 	sync.RWMutex
-	tokenReposithory entities.TokenRepository
+	accountReposithory entities.AccountRepository
 	authorities      []scripts.Authority
 	indexAddress     map[string]int
 	indexLink        map[string]int
@@ -31,9 +31,9 @@ type AuthorityRepository struct {
 /*
 NewAuthorityRepository - create new AuthorityRepository.
 */
-func NewAuthorityRepository(tr entities.TokenRepository, encoder entities.Encoder) *AuthorityRepository {
+func NewAuthorityRepository(tr entities.AccountRepository, encoder entities.Encoder) *AuthorityRepository {
 	a := &AuthorityRepository{
-		tokenReposithory: tr,
+		accountReposithory: tr,
 		authorities:      make([]scripts.Authority, 0),
 		indexAddress:     make(map[string]int),
 		indexLink:        make(map[string]int),
@@ -46,29 +46,29 @@ func NewAuthorityRepository(tr entities.TokenRepository, encoder entities.Encode
 Create - create new Authority.
 Return address (to public key).
 */
-func (a *AuthorityRepository) Create(token entities.Token, link string) (int, error) {
+func (a *AuthorityRepository) Create(account entities.Account, link string) (int, error) {
 	a.Lock()
 	defer a.Unlock()
-	if _, ok := a.indexAddress[token.Address]; ok {
+	if _, ok := a.indexAddress[account.Address]; ok {
 		return len(a.authorities),
-			fmt.Errorf("Token %s already exists in the database", token.Address)
+			fmt.Errorf("Account %s already exists in the database", account.Address)
 	}
 	if _, ok := a.indexLink[link]; ok {
 		return len(a.authorities),
-			fmt.Errorf("Link %s is already in the database and is assigned to address %s.", link, token.Address)
+			fmt.Errorf("Link %s is already in the database and is assigned to address %s.", link, account.Address)
 	}
 	a.setHash()
 
 	num := len(a.authorities)
-	na := scripts.NewAuthority(token, link)
+	na := scripts.NewAuthority(account, link)
 	a.authorities = append(a.authorities, na)
-	a.indexAddress[token.Address] = num
+	a.indexAddress[account.Address] = num
 
 	return num + 1, nil
 }
 
 /*
-Read - get a token at his address.
+Read - get a account at his address.
 
 func (a *AuthorityRepository) Read(address string) (scripts.Authority, error) {
 	a.RLock()
@@ -105,7 +105,7 @@ Hash - get a hash.
 func (a *AuthorityRepository) setHash() {
 	arr := make([]string, 0, len(a.authorities))
 	for _, a := range a.authorities {
-		arr = append(arr, a.Token.Address)
+		arr = append(arr, a.Account.Address)
 	}
 	sort.Strings(arr)
 

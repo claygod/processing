@@ -14,6 +14,7 @@ import (
 Block - contains a resource and restrictions on its use.
 Только одна Condition для того, чтобы брокер/агент мог заблокировать
 покупаемый ресурс, чтобы гонка за этот ресурс была минимальной.
+Подписывает авторитет!
 
 	Transfer/перевод
 Два типа ресурсов (входов), один только у чужого, и НЕ имеет Condition,
@@ -32,13 +33,14 @@ Block - contains a resource and restrictions on its use.
 Комиссия в размере процента (малого) но не меньше 1 единицы.
 */
 type Block struct {
-	OwnerAddress string
+	Owner        string
+	Broker       string
 	State        ExhangeBlock // параметры блока (ресурс и его величина)
 	Condition    ExhangeBlock
 	ParentBlocks [][]byte
 	R            []byte
 	S            []byte
-	Hash         []byte
+	Hash         string
 }
 
 /*
@@ -69,17 +71,17 @@ func NewBlock(authsCount int, myPosition int, mailingWidth int) (*Block, error) 
 /*
 marshalling - preparation of data for hashing
 */
-func (b *Block) marshalling() ([]byte, error) {
+func (b *Block) marshalling() (string, error) {
 	b.R = []byte{}
 	b.S = []byte{}
-	b.Hash = []byte{}
+	b.Hash = ""
 	b.sortParentBlocks()
 
 	nb, err := json.Marshal(b)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return nb, nil
+	return string(nb), nil
 }
 
 /*
