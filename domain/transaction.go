@@ -77,7 +77,7 @@ func (t *Transaction) marshalling() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	t.Hash = string(nb)
+	//t.Hash = string(nb)
 	return string(nb), nil
 }
 
