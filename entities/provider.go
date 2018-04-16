@@ -1,4 +1,4 @@
-package domain
+package entities
 
 // Processing
 // Provider
@@ -7,16 +7,14 @@ package domain
 import (
 	"runtime"
 	"sync/atomic"
-
-	"github.com/claygod/processing/entities"
 )
 
 /*
 Provider - inputs and outputs resources from the network.
 */
 type Provider struct {
-	account  entities.Account
-	resource entities.Resource
+	account  Account
+	resource Resource
 	limit    int64 // максимум, сколько можно вводить в систему
 	counter  int64 // сколько введено в систему
 }
@@ -24,7 +22,7 @@ type Provider struct {
 /*
 NewProvider - create new Provider.
 */
-func NewProvider(id entities.Account) *Provider {
+func NewProvider(id Account) *Provider {
 	r := &Provider{
 		account: id,
 	}

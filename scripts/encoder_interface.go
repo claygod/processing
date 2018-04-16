@@ -1,4 +1,4 @@
-package entities
+package scripts
 
 // Processing
 // Encoder (interface)

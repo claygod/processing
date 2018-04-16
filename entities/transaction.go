@@ -1,4 +1,4 @@
-package domain
+package entities
 
 // Processing
 // Transaction
@@ -10,8 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
-
-	"github.com/claygod/processing/entities"
 )
 
 /*
@@ -22,8 +20,8 @@ Transaction -
 type Transaction struct {
 	Initiator string
 	Broker    string
-	Inputs    []entities.Block
-	Outputs   []entities.Block
+	Inputs    []Block
+	Outputs   []Block
 	R         []byte
 	S         []byte
 	Hash      string
@@ -37,8 +35,8 @@ func NewTransaction(initiator string, broker string) *Transaction {
 	r := &Transaction{
 		Initiator: initiator,
 		Broker:    broker,
-		Inputs:    make([]entities.Block, 0),
-		Outputs:   make([]entities.Block, 0),
+		Inputs:    make([]Block, 0),
+		Outputs:   make([]Block, 0),
 	}
 	return r
 }
@@ -46,7 +44,7 @@ func NewTransaction(initiator string, broker string) *Transaction {
 /*
 AddInput - add Input.
 */
-func (t *Transaction) AddInput(b entities.Block) error {
+func (t *Transaction) AddInput(b Block) error {
 	conditionCounter := 0
 	if len(t.Outputs) > 0 {
 		return fmt.Errorf("The outputs are already formed and inputs can not be added.")
@@ -63,6 +61,14 @@ func (t *Transaction) AddInput(b entities.Block) error {
 		return fmt.Errorf("It is impossible to combine several exchanges in one transaction.")
 	}
 	t.Inputs = append(t.Inputs, b)
+	return nil
+}
+
+/*
+Transfer - .
+*/
+func (t *Transaction) Transfer(b Block) error {
+
 	return nil
 }
 

@@ -1,4 +1,4 @@
-package domain
+package entities
 
 // Processing
 // Authority
@@ -6,15 +6,13 @@ package domain
 
 import (
 	"sync/atomic"
-
-	"github.com/claygod/processing/entities"
 )
 
 /*
 Authority - an important node in the network.
 */
 type Authority struct {
-	Account entities.Account
+	Account Account
 	Link    string `json:"url"`
 	Status  int64
 }
@@ -22,7 +20,7 @@ type Authority struct {
 /*
 NewAuthority - create new Authority.
 */
-func NewAuthority(account entities.Account, link string) Authority {
+func NewAuthority(account Account, link string) Authority {
 	a := Authority{
 		Account: account,
 		Link:    link,

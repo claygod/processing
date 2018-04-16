@@ -1,4 +1,4 @@
-package domain
+package entities
 
 // Processing
 // Providers repository (interface)
