@@ -12,8 +12,8 @@ import (
 TransactionInteractor - transactional use cases.
 */
 type TransactionInteractor struct {
-	authority entities.Authority
-	eccoder   Encoder
+	broker  entities.Authority
+	encoder Encoder
 }
 
 /*
