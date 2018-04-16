@@ -6,8 +6,10 @@ package entities
 
 import (
 	//"crypto/sha256"
+	"bytes"
+	"encoding/gob"
 	"encoding/json"
-	"sort"
+	//"sort"
 )
 
 /*
@@ -36,14 +38,14 @@ Block - contains a resource and restrictions on its use.
 Комиссия в размере процента (малого) но не меньше 1 единицы.
 */
 type Block struct {
-	Owner        string
-	Broker       string
-	State        ExhangeBlock // параметры блока (ресурс и его величина)
-	Condition    ExhangeBlock
-	ParentBlocks [][]byte
-	R            []byte
-	S            []byte
-	Hash         string
+	Owner     string
+	Broker    string
+	State     ExhangeBlock // параметры блока (ресурс и его величина)
+	Condition ExhangeBlock
+	// ParentBlocks [][]byte
+	R    []byte
+	S    []byte
+	Hash string
 }
 
 /*
@@ -72,13 +74,32 @@ func NewBlock(authsCount int, myPosition int, mailingWidth int) (*Block, error) 
 */
 
 /*
-marshalling - preparation of data for hashing
+Marshalling - preparation of data for hashing
 */
-func (b *Block) marshalling() (string, error) {
+func (b *Block) Marshalling() (string, error) {
 	b.R = []byte{}
 	b.S = []byte{}
 	b.Hash = ""
-	b.sortParentBlocks()
+	//b.sortParentBlocks()
+
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(b)
+	if err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
+}
+
+/*
+MarshallingJson - preparation of data for hashing
+*/
+func (b *Block) MarshallingJson() (string, error) {
+	b.R = []byte{}
+	b.S = []byte{}
+	b.Hash = ""
+	//b.sortParentBlocks()
 
 	nb, err := json.Marshal(b)
 	if err != nil {
@@ -88,8 +109,15 @@ func (b *Block) marshalling() (string, error) {
 }
 
 /*
-sortParentBlocks - locks must be sorted for determinism.
+SetHash - set hash.
 */
+func (b *Block) SetHash(hash string) {
+	b.Hash = hash
+}
+
+/*
+sortParentBlocks - locks must be sorted for determinism.
+
 func (b *Block) sortParentBlocks() {
 	strs := make([]string, len(b.ParentBlocks))
 	for k, v := range b.ParentBlocks {
@@ -101,7 +129,7 @@ func (b *Block) sortParentBlocks() {
 	}
 
 }
-
+*/
 /*
 CalculateHash - calculation of the hash over all fields of the structure.
 ToDo: replace the string with the byte array.

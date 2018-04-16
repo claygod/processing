@@ -5,6 +5,8 @@ package domain
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 import (
+	"bytes"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -65,9 +67,28 @@ func (t *Transaction) AddInput(b entities.Block) error {
 }
 
 /*
-marshalling - preparation of data for hashing.
+Marshalling - preparation of data for hashing.
 */
-func (t *Transaction) marshalling() (string, error) {
+func (t *Transaction) Marshalling() (string, error) {
+	t.R = []byte{}
+	t.S = []byte{}
+	t.Hash = "" //[]byte{}
+	t.sortBlocks()
+
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(t)
+	if err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
+}
+
+/*
+MarshallingJson - preparation of data for hashing.
+*/
+func (t *Transaction) MarshallingJson() (string, error) {
 	t.R = []byte{}
 	t.S = []byte{}
 	t.Hash = "" //[]byte{}
@@ -79,6 +100,13 @@ func (t *Transaction) marshalling() (string, error) {
 	}
 	//t.Hash = string(nb)
 	return string(nb), nil
+}
+
+/*
+SetHash - set hash.
+*/
+func (t *Transaction) SetHash(hash string) {
+	t.Hash = hash
 }
 
 /*
