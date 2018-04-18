@@ -79,7 +79,7 @@ func (t *Transaction) AddInput(b Block) error {
 
 /*
 Check - проверка заполненной транзакции.
-*/
+
 func (t *Transaction) Check(fee *Fee) error { // 1 fee = сотая часть процента
 	switch t.Type {
 	case TransactionTypeTransfer:
@@ -94,10 +94,10 @@ func (t *Transaction) Check(fee *Fee) error { // 1 fee = сотая часть �
 	}
 	return nil
 }
-
+*/
 /*
 checkTransfer - проверка заполненной транзакции 'Transfer'.
-*/
+
 func (t *Transaction) checkTransfer(fee *Fee) error {
 	// проверка на количество входов/выходов
 	if len(t.Inputs) == 0 || len(t.Outputs) != 2 {
@@ -118,10 +118,10 @@ func (t *Transaction) checkTransfer(fee *Fee) error {
 	}
 	return nil
 }
-
+*/
 /*
 checkTransferInputs - проверка входов заполненной транзакции 'Transfer'.
-*/
+
 func (t *Transaction) checkTransferInputs() error {
 	resource := t.Inputs[0].State.ResourceId
 	for _, b := range t.Inputs {
@@ -137,10 +137,10 @@ func (t *Transaction) checkTransferInputs() error {
 	}
 	return nil
 }
-
+*/
 /*
 checkTransferOutputs - проверка выходов заполненной транзакции 'Transfer'.
-*/
+
 func (t *Transaction) checkTransferOutputs(fee *Fee) error {
 	// проверка на совпадение входных и выходных ресурсов
 	resource := t.Outputs[0].State.ResourceId
@@ -188,7 +188,8 @@ func (t *Transaction) checkTransferOutputs(fee *Fee) error {
 	// проверка суммы получателю не делается, она косвенно в проверках на сумму и на комиссионные
 	return nil
 }
-
+*/
+/*
 func (t *Transaction) inAmount() int {
 	inAmount := 0
 	for _, b := range t.Inputs {
@@ -201,7 +202,7 @@ func (t *Transaction) toFee(amount int, fee int) int {
 	// amount * fee / 10000
 	return 1
 }
-
+*/
 /*
 Marshalling - preparation of data for hashing.
 */

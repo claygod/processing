@@ -84,7 +84,7 @@ func (bv *TransactionValidator) checkTransfer(t *Transaction) error {
 			t.Inputs[0].State.ResourceId, t.Outputs[0].State.ResourceId)
 	}
 	// проверка входов
-	if err := t.checkTransferInputs(); err != nil {
+	if err := bv.checkTransferInputs(t); err != nil {
 		return err
 	}
 	// проверка выходов
@@ -179,7 +179,11 @@ func (bv *TransactionValidator) checkTransferOutputs(t *Transaction) error {
 	}
 	// проверка на общую сумму
 	outAmount := t.Outputs[0].State.Amount + t.Outputs[1].State.Amount
-	inAmount := t.inAmount()
+	inAmount := 0
+	for _, b := range t.Inputs {
+		inAmount += b.State.Amount
+	}
+	// inAmount := bv.inAmount(t)
 	if outAmount != inAmount {
 		fmt.Errorf("Do not match the amount of inputs (%d) and outputs (%d).", inAmount, outAmount)
 	}
@@ -234,3 +238,13 @@ func (bv *TransactionValidator) validateBlock(b Block) error {
 	}
 	return nil
 }
+
+/*
+func (bv *TransactionValidator) inAmount(t *Transaction) int {
+	inAmount := 0
+	for _, b := range t.Inputs {
+		inAmount += b.State.Amount
+	}
+	return inAmount
+}
+*/
