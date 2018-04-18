@@ -62,13 +62,18 @@ func (bv *TransactionValidator) Validate(t *Transaction) error { // 1 fee = со
 checkTransfer - проверка заполненной транзакции 'Transfer'.
 */
 func (bv *TransactionValidator) checkTransfer(t *Transaction) error {
-	// проверка на наличие аккаунтов брокера и инициатора
-	if _, err := bv.accRepo.Read(t.Initiator); err != nil {
+	// проверка хэша, ключей и наличия аккаунтов брокера и инициатора
+	if err := bv.validateSignature(t); err != nil {
 		return err
 	}
-	if _, err := bv.authRepo.Read(t.Broker); err != nil {
-		return err
-	}
+	/*
+		if _, err := bv.accRepo.Read(t.Initiator); err != nil {
+			return err
+		}
+		if _, err := bv.authRepo.Read(t.Broker); err != nil {
+			return err
+		}
+	*/
 	// проверка на количество входов/выходов
 	if len(t.Inputs) == 0 || len(t.Outputs) != 2 {
 		fmt.Errorf("Few inputs (%d) and outputs (%d)", len(t.Inputs), len(t.Outputs))
@@ -85,6 +90,34 @@ func (bv *TransactionValidator) checkTransfer(t *Transaction) error {
 	// проверка выходов
 	if err := bv.checkTransferOutputs(t); err != nil {
 		return err
+	}
+	// проверка хэша
+
+	return nil
+}
+
+/*
+validateSignature - проверяем хэш и ключи b yfkbxbt.
+*/
+func (bv *TransactionValidator) validateSignature(t *Transaction) error {
+	broker, err := bv.authRepo.Read(t.Broker)
+	if err != nil {
+		return err
+	}
+	if _, err := bv.accRepo.Read(t.Initiator); err != nil {
+		return err
+	}
+	hash, err := t.Marshalling()
+	if err != nil {
+		return err
+	}
+	if t.Hash != bv.encoder.Address(hash) {
+		fmt.Errorf("In the hash %s transaction, it must be %s.", t.Hash, hash)
+	}
+	r := new(big.Int).SetBytes(t.R)
+	s := new(big.Int).SetBytes(t.S)
+	if !bv.encryptor.Verify(hash, broker.Account.PubKey, r, s) {
+		return fmt.Errorf("An error in the signature (R, S).")
 	}
 	return nil
 }

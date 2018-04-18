@@ -205,7 +205,7 @@ func (t *Transaction) toFee(amount int, fee int) int {
 /*
 Marshalling - preparation of data for hashing.
 */
-func (t *Transaction) Marshalling() (string, error) {
+func (t *Transaction) Marshalling() ([]byte, error) {
 	t.R = []byte{}
 	t.S = []byte{}
 	t.Hash = "" //[]byte{}
@@ -215,10 +215,10 @@ func (t *Transaction) Marshalling() (string, error) {
 	enc := gob.NewEncoder(&buf)
 	err := enc.Encode(t)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return buf.String(), nil
+	return buf.Bytes(), nil
 }
 
 /*
