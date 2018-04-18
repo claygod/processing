@@ -66,14 +66,6 @@ func (bv *TransactionValidator) checkTransfer(t *Transaction) error {
 	if err := bv.validateSignature(t); err != nil {
 		return err
 	}
-	/*
-		if _, err := bv.accRepo.Read(t.Initiator); err != nil {
-			return err
-		}
-		if _, err := bv.authRepo.Read(t.Broker); err != nil {
-			return err
-		}
-	*/
 	// проверка на количество входов/выходов
 	if len(t.Inputs) == 0 || len(t.Outputs) != 2 {
 		fmt.Errorf("Few inputs (%d) and outputs (%d)", len(t.Inputs), len(t.Outputs))
@@ -91,13 +83,12 @@ func (bv *TransactionValidator) checkTransfer(t *Transaction) error {
 	if err := bv.checkTransferOutputs(t); err != nil {
 		return err
 	}
-	// проверка хэша
 
 	return nil
 }
 
 /*
-validateSignature - проверяем хэш и ключи b yfkbxbt.
+validateSignature - проверяем хэш и ключи и наличие инициатора и брокера.
 */
 func (bv *TransactionValidator) validateSignature(t *Transaction) error {
 	broker, err := bv.authRepo.Read(t.Broker)
