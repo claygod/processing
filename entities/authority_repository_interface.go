@@ -9,5 +9,6 @@ AuthorityRepository - storage authorty interface.
 */
 type AuthorityRepository interface {
 	Create(AccountRepository, string) (int, error)
+	Read(string) (Authority, error) // by address
 	List() []Authority
 }
