@@ -98,7 +98,6 @@ func (bv *TransactionValidator) checkTransferOutputs(t *Transaction) error {
 	for _, b := range t.Inputs {
 		inAmount += b.State.Amount
 	}
-	// inAmount := bv.inAmount(t)
 	if outAmount != inAmount {
 		fmt.Errorf("Do not match the amount of inputs (%d) and outputs (%d).", inAmount, outAmount)
 	}
@@ -107,10 +106,10 @@ func (bv *TransactionValidator) checkTransferOutputs(t *Transaction) error {
 	if feeAmount < 0 {
 		fmt.Errorf("Error calculating transaction fees. (%d).", feeAmount)
 	}
-	// feeAmount := int(fee.Count(uint64(outAmount))) //t.toFee(outAmount, fee)
 	if brokerBlock.State.Amount != feeAmount {
 		fmt.Errorf("The expected brokerage fee is %d, and %d is indicated.", feeAmount, brokerBlock.State.Amount)
 	}
 	// проверка суммы получателю не делается, она косвенно в проверках на сумму и на комиссионные
+
 	return nil
 }

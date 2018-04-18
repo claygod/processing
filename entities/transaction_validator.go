@@ -11,6 +11,8 @@ import (
 
 /*
 TransactionValidator - identifier.
+
+1 fee = доля/часть ста процентов, к примеру 1/10000
 */
 type TransactionValidator struct {
 	encoder   Encoder
@@ -45,7 +47,7 @@ func NewTransactionValidator(
 /*
 Validate - проверка заполненной транзакции (API).
 */
-func (bv *TransactionValidator) Validate(t *Transaction) error { // 1 fee = сотая часть процента
+func (bv *TransactionValidator) Validate(t *Transaction) error {
 	switch t.Type {
 	case TransactionTypeTransfer:
 		bv.checkTransfer(t)
