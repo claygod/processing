@@ -75,7 +75,7 @@ func NewBlock(authsCount int, myPosition int, mailingWidth int) (*Block, error) 
 /*
 Marshalling - preparation of data for hashing
 */
-func (b *Block) Marshalling() (string, error) {
+func (b *Block) Marshalling() ([]byte, error) {
 	b.R = []byte{}
 	b.S = []byte{}
 	b.Hash = ""
@@ -85,10 +85,10 @@ func (b *Block) Marshalling() (string, error) {
 	enc := gob.NewEncoder(&buf)
 	err := enc.Encode(b)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return buf.String(), nil
+	return buf.Bytes(), nil
 }
 
 /*
