@@ -15,8 +15,8 @@ TransactionInteractor - transactional use cases.
 */
 type TransactionInteractor struct {
 	broker    entities.Authority
-	encoder   Encoder
-	encryptor Encryptor
+	encoder   entities.Encoder
+	encryptor entities.Encryptor
 	fee       int
 }
 
