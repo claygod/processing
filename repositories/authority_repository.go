@@ -5,13 +5,13 @@ package repositories
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 import (
-	"crypto/sha256"
+	//"crypto/sha256"
 	"fmt"
 	"sort"
 	"sync"
 
 	"github.com/claygod/processing/entities"
-	"github.com/claygod/processing/scripts"
+	//"github.com/claygod/processing/scripts"
 )
 
 /*
@@ -21,11 +21,11 @@ This repository is not allowed to delete scripts!
 type AuthorityRepository struct {
 	sync.RWMutex
 	accountReposithory entities.AccountRepository
-	authorities      []scripts.Authority
-	indexAddress     map[string]int
-	indexLink        map[string]int
-	encoder          entities.Encoder
-	hash             string // хэш для отсылки и верификации
+	authorities        []entities.Authority
+	indexAddress       map[string]int
+	indexLink          map[string]int
+	encoder            entities.Encoder
+	hash               string // хэш для отсылки и верификации
 }
 
 /*
@@ -34,10 +34,10 @@ NewAuthorityRepository - create new AuthorityRepository.
 func NewAuthorityRepository(tr entities.AccountRepository, encoder entities.Encoder) *AuthorityRepository {
 	a := &AuthorityRepository{
 		accountReposithory: tr,
-		authorities:      make([]scripts.Authority, 0),
-		indexAddress:     make(map[string]int),
-		indexLink:        make(map[string]int),
-		encoder:          encoder,
+		authorities:        make([]entities.Authority, 0),
+		indexAddress:       make(map[string]int),
+		indexLink:          make(map[string]int),
+		encoder:            encoder,
 	}
 	return a
 }
@@ -60,7 +60,7 @@ func (a *AuthorityRepository) Create(account entities.Account, link string) (int
 	a.setHash()
 
 	num := len(a.authorities)
-	na := scripts.NewAuthority(account, link)
+	na := entities.NewAuthority(account, link)
 	a.authorities = append(a.authorities, na)
 	a.indexAddress[account.Address] = num
 
@@ -82,10 +82,10 @@ func (a *AuthorityRepository) Read(address string) (scripts.Authority, error) {
 /*
 List - get a Authority list.
 */
-func (a *AuthorityRepository) List() []scripts.Authority {
+func (a *AuthorityRepository) List() []entities.Authority {
 	a.RLock()
 	defer a.RUnlock()
-	nar := make([]scripts.Authority, len(a.authorities))
+	nar := make([]entities.Authority, len(a.authorities))
 	copy(nar, a.authorities)
 	return nar
 }
