@@ -24,7 +24,7 @@ This repository is not allowed to delete entities!
 с точки зрения зависимостей.
 */
 type Consensus interface { // enumerator
-	Create(*Transaction) error
+	// Create(*Transaction) error
 	/*
 		Подтверждение может дублировать создание, т.е. первый конфирм инициализирует
 		создание подтверждающего модуля и фиксирует время создания. По этому времени
