@@ -58,6 +58,23 @@ func (a *Account) Block(amount int64) (int64, error) {
 	}
 }
 
+func (a *Account) Unblock(amount int64) (int64, error) {
+	if amount < 0 {
+		return amount, fmt.Errorf("For the unblocking operation, the digit must be greater than zero: %d", amount)
+	}
+	for {
+		blocked := atomic.LoadInt64(&a.blocked)
+		if blocked < amount {
+			return -1, fmt.Errorf("Unblocking error - there is %d, but unblocked %d.", blocked, amount)
+		}
+		if atomic.CompareAndSwapInt64(&a.blocked, blocked, blocked-amount) {
+			b := atomic.AddInt64(&a.available, amount)
+			return b, nil
+		}
+		runtime.Gosched()
+	}
+}
+
 func (a *Account) Credit(amount int64) (int64, error) {
 	if amount < 0 {
 		return amount, fmt.Errorf("For the credit operation, the digit must be greater than zero: %d", amount)
@@ -68,8 +85,7 @@ func (a *Account) Credit(amount int64) (int64, error) {
 			return -1, fmt.Errorf("Credit error - there is %d, but blocked %d.", amount, blocked)
 		}
 		if atomic.CompareAndSwapInt64(&a.blocked, blocked, blocked-amount) {
-			b := atomic.AddInt64(&a.blocked, amount)
-			return b, nil
+			return blocked - amount, nil
 		}
 		runtime.Gosched()
 	}
