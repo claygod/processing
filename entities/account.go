@@ -26,8 +26,8 @@ type Account struct {
 /*
 NewAccount - create new Account.
 */
-func NewAccount() Account {
-	return Account{}
+func NewAccount() *Account {
+	return &Account{}
 }
 
 func (a *Account) Debit(amount int64) (int64, error) {

@@ -5,72 +5,59 @@ package repositories
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/claygod/processing/entities"
 )
 
 /*
-AccountRepository - storage account (implementation).
-This repository is not allowed to delete entities!
+AccountRepository - accounts store.
 */
 type AccountRepository struct {
-	sync.RWMutex
-	accounts       []entities.Account
-	indexAddress map[string]int
-	encoder      entities.Encoder
+	accs [256]*accountStore // 256 arrays to reduce access competitiveness
 }
 
 /*
-NewAccountRepository - create new AccountRepository.
+NewUnit - create new Unit.
 */
-func NewAccountRepository(encoder entities.Encoder) *AccountRepository {
-	t := &AccountRepository{
-		accounts:       make([]entities.Account, 0),
-		indexAddress: make(map[string]int),
-		encoder:      encoder,
+func NewAccountRepository() AccountRepository {
+	ar := AccountRepository{}
+	for i := 0; i < 256; i++ {
+		ar.accs[i] = newAccountStore()
 	}
-	return t
+	return ar
 }
 
-/*
-Create - create new Account.
-Return address (to public key).
-*/
-func (t *AccountRepository) Create(pubKey []byte) (string, error) {
-	address := t.encoder.Address(pubKey)
-	t.Lock()
-	defer t.Unlock()
-	if _, ok := t.indexAddress[address]; ok {
-		return "", fmt.Errorf("The address %s for this key already exists", address)
+func (a *AccountRepository) Read(str string) *entities.Account {
+	var key byte
+	if len(str) > 0 {
+		key = []byte(str)[0]
 	}
-	num := len(t.accounts)
-	nt := entities.NewAccount(address, pubKey)
-	t.accounts = append(t.accounts, nt)
-	t.indexAddress[address] = num
-	return address, nil
+	return a.accs[key].getAccount(str)
 }
 
 /*
-Read - get a account at his address.
+accountStore - accounts substore.
 */
-func (t *AccountRepository) Read(address string) (entities.Account, error) {
-	t.RLock()
-	defer t.RUnlock()
-	if tkn, ok := t.indexAddress[address]; ok {
-		return t.accounts[tkn], nil
+type accountStore struct {
+	sync.Mutex
+	accounts map[string]*entities.Account
+}
+
+func newAccountStore() *accountStore {
+	as := &accountStore{
+		accounts: make(map[string]*entities.Account),
 	}
-	return entities.Account{}, fmt.Errorf("Address %s not found", address)
+	return as
 }
 
-/*
-List - get a accountss list.
-*/
-func (t *AccountRepository) List() []entities.Account {
-	t.RLock()
-	defer t.RUnlock()
-	ntr := make([]entities.Account, len(t.accounts))
-	copy(ntr, t.accounts)
-	return ntr
+func (as *accountStore) getAccount(key string) *entities.Account {
+	as.Lock()
+	a, ok := as.accounts[key]
+	if !ok {
+		a = entities.NewAccount()
+		as.accounts[key] = a
+	}
+	as.Unlock()
+	return a
 }
