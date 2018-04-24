@@ -13,6 +13,11 @@ const maxKeyLen int = 100
 
 /*
 Unit - .
+
+    A unit can be a customer, a company, etc.
+    A unit can have many accounts (accounts are called a string variable)
+    If a unit receives a certain amount for a nonexistent account, such an account will be created
+
 */
 type Unit struct {
 	// sync.RWMutex

@@ -12,18 +12,18 @@ import (
 Authority - an important node in the network.
 */
 type Authority struct {
-	Account Account
-	Link    string `json:"url"`
-	Status  int64
+	Unit   Unit
+	Link   string `json:"url"`
+	Status int64
 }
 
 /*
 NewAuthority - create new Authority.
 */
-func NewAuthority(account Account, link string) Authority {
+func NewAuthority(account Unit, link string) Authority {
 	a := Authority{
-		Account: account,
-		Link:    link,
+		Unit: account,
+		Link: link,
 	}
 	return a
 }

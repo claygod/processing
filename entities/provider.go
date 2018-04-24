@@ -13,7 +13,7 @@ import (
 Provider - inputs and outputs resources from the network.
 */
 type Provider struct {
-	account  Account
+	unit  Unit
 	resource Resource
 	limit    int64 // максимум, сколько можно вводить в систему
 	counter  int64 // сколько введено в систему
@@ -22,9 +22,9 @@ type Provider struct {
 /*
 NewProvider - create new Provider.
 */
-func NewProvider(id Account) *Provider {
+func NewProvider(id Unit) *Provider {
 	r := &Provider{
-		account: id,
+		unit: id,
 	}
 	return r
 }
