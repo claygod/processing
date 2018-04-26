@@ -21,6 +21,7 @@ Unit - .
 */
 type Unit struct {
 	// sync.RWMutex
+	pubKey   []byte
 	accsRepo AccountRepository
 }
 
