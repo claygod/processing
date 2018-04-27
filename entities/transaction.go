@@ -7,6 +7,8 @@ package entities
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
+	"sort"
 	"time"
 )
 
@@ -49,6 +51,51 @@ func (t *Transaction) Credit(unit string, account string, amount int64) *Transac
 	})
 	return t
 }
+
+func (t *Transaction) AddSignature(ts *TransactionSignature) error {
+	for _, s := range t.Signatures {
+		if s.Unit == ts.Unit {
+			fmt.Errorf("Signature unit %s has already been added.", ts.Unit)
+		}
+	}
+	t.Signatures = append(t.Signatures, ts)
+	sort.Slice(t.Signatures, func(i, j int) bool { return string(t.Signatures[i].R) < string(t.Signatures[j].R) })
+	return nil
+}
+
+func (t *Transaction) GetHash() (string, error) {
+	hash, err := t.Body.Marshalling()
+	if err != nil {
+		return "", err
+	}
+	t.Hash = string(hash)
+	return t.Hash, nil
+}
+
+/*
+Marshalling - preparation of data for hashing.
+*/
+func (t *Transaction) Marshalling() ([]byte, error) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(t)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+/*
+func (t *Transaction) verification() error {
+	hash, err := t.Marshalling()
+	if err != nil {
+		return err
+	}
+	// тут проверкакорректности
+	return nil
+}
+*/
 
 /*
 func (t *Transaction) newBody(initiator string, broker string) {
