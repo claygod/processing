@@ -5,6 +5,7 @@ package entities
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 import (
+	// "bytes"
 	"fmt"
 	"sort"
 )
@@ -13,8 +14,8 @@ import (
 Block -
 */
 type Block struct {
-	Number       int64
-	Hash         string
+	//Number       int64
+	//Hash         string
 	Transactions []*Transaction
 }
 
@@ -23,7 +24,7 @@ NewBlock - create new Block.
 */
 func NewBlock(num int64) *Block {
 	b := &Block{
-		Number:       num,
+		//Number:       num,
 		Transactions: make([]*Transaction, 0),
 	}
 	return b
@@ -40,7 +41,17 @@ func (b *Block) AddTransaction(t *Transaction) error {
 	return nil
 }
 
-func (b *Block) Close() *Block {
+func (b *Block) Close() { // (string, error)
 	sort.Slice(b.Transactions, func(i, j int) bool { return b.Transactions[i].Hash < b.Transactions[j].Hash })
-	return NewBlock(b.Number + 2)
+	/*
+		var buf bytes.Buffer
+		for _, t := range b.Transactions {
+			_, err := buf.WriteString(t.Hash)
+			if err != nil {
+				return "", err
+			}
+		}
+		b.Hash = buf.String()
+	*/
+	// return b.Hash, nil
 }
