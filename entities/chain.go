@@ -38,10 +38,11 @@ func NewChain(num int64) *Chain {
 	return ch
 }
 
-func (c *Chain) AddTransaction() {
+func (c *Chain) AddTransaction(t *Transaction) {
 	c.Lock()
 	defer c.Unlock()
-
+	c.CurrentBlock.AddTransaction(t)
+	c.OverlapBlock.AddTransaction(t)
 }
 
 func (c *Chain) Switch(t *Transaction) int64 {
