@@ -33,7 +33,7 @@ type Block struct {
 /*
 NewBlock - create new Block.
 */
-func NewBlock(num int64) *Block {
+func NewBlock() *Block {
 	b := &Block{
 		//Number:       num,
 		Transactions: NewTransactionsStore(), // make([]*Transaction, 0),

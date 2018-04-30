@@ -5,61 +5,65 @@ package entities
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 import (
-	// "fmt"
-	"sync"
-	"time"
+	"sync/atomic"
+	"unsafe"
 )
 
 /*
 Chain -
 */
 type Chain struct {
-	sync.Mutex
-	Counter      int64
-	SwitchTime   int64
-	CurrentBlock *Block
-	OverlapBlock *Block
-	Blocks       map[int64]*Block // ToDo: Repository
+	CurrentBlock    *Block
+	OverlapBlock    *Block
+	CurBlocks       *CurrentBlocks
+	BlockRepository BlockRepository
 }
 
 /*
 NewChain - create new Chain.
 */
-func NewChain(num int64) *Chain {
-	if num == 0 {
-		num = 1
-	}
+func NewChain(bRepo BlockRepository) *Chain {
 	ch := &Chain{
-		Counter:      num,
-		SwitchTime:   new(time.Time).Unix(),
-		CurrentBlock: NewBlock(num),
-		OverlapBlock: NewBlock(num - 1),
+		CurrentBlock:    NewBlock(),
+		OverlapBlock:    NewBlock(),
+		CurBlocks:       NewCurrentBlocks(NewBlock(), NewBlock()),
+		BlockRepository: bRepo,
 	}
 	return ch
 }
 
 func (c *Chain) AddTransaction(t *Transaction) {
-	c.Lock()
-	defer c.Unlock()
-	c.CurrentBlock.AddTransaction(t)
-	c.OverlapBlock.AddTransaction(t)
+	c.CurBlocks.CurrentBlock.AddTransaction(t)
+	c.CurBlocks.OverlapBlock.AddTransaction(t)
 }
 
 func (c *Chain) Switch(t *Transaction) int64 {
-	c.Lock()
-	defer c.Unlock()
-	c.SwitchTime = new(time.Time).Unix()
-	nb := NewBlock(c.Counter + 1)
-	c.OverlapBlock.Close()
-	//if err != nil {
-	//	return c.Counter, err
-	//}
-	c.Counter++
-	c.CurrentBlock, c.OverlapBlock = nb, c.CurrentBlock
-	c.addBlock(nb, c.Counter)
-	return c.Counter
+	newBlock := NewBlock()
+	oldBlock := c.OverlapBlock
+	nCb := NewCurrentBlocks(newBlock, c.CurrentBlock)
+	//addr := uintptr(unsafe.Pointer(c.CurBlocks))
+	//atomic.StoreUintptr(&addr, uintptr(unsafe.Pointer(nCb)))
+	addr := unsafe.Pointer(c.CurBlocks)
+	atomic.StorePointer(&addr, unsafe.Pointer(nCb))
+	oldBlock.Close()
+	c.BlockRepository.Write(c.OverlapBlock)
+	return 0
 }
 
-func (c *Chain) addBlock(b *Block, num int64) {
-	c.Blocks[num] = b
+type CurrentBlocks struct {
+	CurrentBlock *Block
+	OverlapBlock *Block
+}
+
+func NewCurrentBlocks(cBlock *Block, oBlock *Block) *CurrentBlocks {
+	c := &CurrentBlocks{
+		CurrentBlock: cBlock,
+		OverlapBlock: oBlock,
+	}
+	return c
+}
+
+func (c *CurrentBlocks) AddTransaction(t *Transaction) {
+	c.CurrentBlock.AddTransaction(t)
+	c.OverlapBlock.AddTransaction(t)
 }
