@@ -5,6 +5,7 @@ package entities
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 import (
+	"fmt"
 	"sync/atomic"
 	"unsafe"
 )
@@ -48,6 +49,28 @@ func (c *Chain) Switch(t *Transaction) int64 {
 	oldBlock.Close()
 	c.BlockRepository.Write(c.OverlapBlock)
 	return 0
+}
+
+func (c *Chain) Verification(bh *BlockHash, num int64) error {
+	b1, err := c.BlockRepository.Read(num - 1)
+	if err != nil {
+		return err
+	}
+
+	b2, err := c.BlockRepository.Read(num + 1)
+	if err != nil {
+		return err
+	}
+	h1 := b1.Transactions.Hashes()
+	h2 := b2.Transactions.Hashes()
+	for hash, _ := range bh.Transactions {
+		if _, ok := h1[hash]; !ok {
+			if _, ok := h2[hash]; !ok {
+				fmt.Errorf("Transaction %s was not found.", hash)
+			}
+		}
+	}
+	return nil
 }
 
 type CurrentBlocks struct {

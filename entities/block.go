@@ -142,6 +142,21 @@ func (t *TransactionsStore) AddTransaction(tn *Transaction) {
 	t.Transactions = append(t.Transactions, tn)
 }
 
+/*
+Hashes
+Эта функция по идее будет использоваться редко,
+но тем не менее реализована параллельно безопастно.
+*/
+func (t *TransactionsStore) Hashes() map[string]bool {
+	out := make(map[string]bool)
+	t.lock()
+	defer t.unlock()
+	for _, v := range t.Transactions {
+		out[v.Hash] = true
+	}
+	return out
+}
+
 func (t *TransactionsStore) lock() {
 	for {
 		if atomic.CompareAndSwapInt64(&t.Hasp, unlocked, blocked) {
@@ -158,4 +173,9 @@ func (t *TransactionsStore) unlock() {
 		}
 		runtime.Gosched()
 	}
+}
+
+type BlockHash struct {
+	Saldo        int64
+	Transactions map[string]bool
 }
