@@ -27,7 +27,7 @@ type Block struct {
 	//Hash         string
 	Saldo int64
 	// Hasp         int64
-	Transactions *TransactionsStore // []*Transaction
+	Transactions *TransactionsStore // ToDo: сохранить тут номера и получать по мере надобности из репозитория
 }
 
 /*
@@ -43,7 +43,7 @@ func NewBlock() *Block {
 
 func (b *Block) AddTransaction(t *Transaction) {
 	if atomic.LoadInt64(&b.Saldo) > i62 {
-		fmt.Errorf("The block is closed, you can not add it..")
+		fmt.Errorf("The block is closed, you can not add it.")
 	}
 	b.Transactions.AddTransaction(t)
 	/*
@@ -62,6 +62,10 @@ func (b *Block) AddTransaction(t *Transaction) {
 	}
 	// sort.Slice(b.Transactions, func(i, j int) bool { return string(b.Transactions[i].Hash) < string(b.Transactions[j].Hash) })
 	// return nil
+}
+
+func (b *Block) Hashes() map[string]bool {
+	return b.Transactions.Hashes()
 }
 
 func (b *Block) Close() { // (string, error)
@@ -123,6 +127,7 @@ func (b *Block) unlock() {
 	}
 }
 */
+
 type TransactionsStore struct {
 	Hasp         int64
 	Transactions []*Transaction
