@@ -6,13 +6,13 @@ package entities
 
 import (
 	// "bytes"
-	"fmt"
+	// "fmt"
 	"runtime"
 	// "sort"
 	"sync/atomic"
 )
 
-const i62 int64 = (1 << 63) - 1
+const i62 int64 = (1 << 63) - 1 // ToDo: к удалению, т.к. закрывать блоки не будем
 
 const (
 	unlocked int64 = iota
@@ -27,7 +27,8 @@ type Block struct {
 	//Hash         string
 	Saldo int64
 	// Hasp         int64
-	Transactions *TransactionsStore // ToDo: сохранить тут номера и получать по мере надобности из репозитория
+	// Transactions       *TransactionsStore // ToDo: сохранить тут номера и получать по мере надобности из репозитория
+	Transactions *TransactionsHashes
 }
 
 /*
@@ -36,39 +37,23 @@ NewBlock - create new Block.
 func NewBlock() *Block {
 	b := &Block{
 		//Number:       num,
-		Transactions: NewTransactionsStore(), // make([]*Transaction, 0),
+		//Transactions: NewTransactionsStore(), // make([]*Transaction, 0),
+		Transactions: NewTransactionsHashes(),
 	}
 	return b
 }
 
-func (b *Block) AddTransaction(t *Transaction) {
-	if atomic.LoadInt64(&b.Saldo) > i62 {
-		fmt.Errorf("The block is closed, you can not add it.")
-	}
-	b.Transactions.AddTransaction(t)
-	/*
-		b.lock()
-		defer b.unlock()
-		for _, s := range b.Transactions {
-			if s.Hash == t.Hash {
-				return
-				// fmt.Errorf("Signature unit %s has already been added.", t.Hash)
-			}
-		}
-		b.Transactions = append(b.Transactions, t)
-	*/
-	for _, o := range t.Body.Minus {
-		atomic.AddInt64(&b.Saldo, o.Amount)
-	}
-	// sort.Slice(b.Transactions, func(i, j int) bool { return string(b.Transactions[i].Hash) < string(b.Transactions[j].Hash) })
-	// return nil
+func (b *Block) WriteTransaction(hash string, amount int64) error {
+	b.Transactions.AddTransaction(hash, amount)
+	atomic.AddInt64(&b.Saldo, amount)
+	return nil
 }
 
-func (b *Block) Hashes() map[string]bool {
-	return b.Transactions.Hashes()
+func (b *Block) Hashes() map[string]int64 {
+	return b.Transactions.HashesList()
 }
 
-func (b *Block) Close() { // (string, error)
+func (b *Block) Close222() { // (string, error)
 	//b.lock()
 	//defer b.unlock()
 	for {
@@ -126,6 +111,57 @@ func (b *Block) unlock() {
 		runtime.Gosched()
 	}
 }
+*/
+
+type TransactionsHashes struct {
+	Hasp   int64
+	Hashes map[string]int64
+}
+
+func NewTransactionsHashes() *TransactionsHashes {
+	t := &TransactionsHashes{
+		Hasp:   unlocked,
+		Hashes: make(map[string]int64),
+	}
+	return t
+}
+
+func (t *TransactionsHashes) AddTransaction(hash string, saldo int64) {
+	t.lock()
+	defer t.unlock()
+	t.Hashes[hash] = saldo
+}
+
+func (t *TransactionsHashes) HashesList() map[string]int64 {
+	h := make(map[string]int64)
+	t.lock()
+	defer t.unlock()
+	for k, v := range t.Hashes {
+		h[k] = v
+	}
+	return h
+}
+
+func (t *TransactionsHashes) lock() {
+	for {
+		if atomic.CompareAndSwapInt64(&t.Hasp, unlocked, blocked) {
+			return
+		}
+		runtime.Gosched()
+	}
+}
+
+func (t *TransactionsHashes) unlock() {
+	for {
+		if atomic.CompareAndSwapInt64(&t.Hasp, blocked, unlocked) {
+			return
+		}
+		runtime.Gosched()
+	}
+}
+
+/*
+222 - К УДАЛЕНИЮ
 */
 
 type TransactionsStore struct {

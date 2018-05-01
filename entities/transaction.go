@@ -86,13 +86,21 @@ func (t *Transaction) Marshalling() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+func (t *Transaction) Amount() int64 {
+	var amount int64 = 0
+	for _, op := range t.Body.Minus {
+		amount += op.Amount
+	}
+	return amount
+}
+
 /*
 func (t *Transaction) verification() error {
 	hash, err := t.Marshalling()
 	if err != nil {
 		return err
 	}
-	// тут проверкакорректности
+	// тут проверка корректности ToDo: не реализовано !
 	return nil
 }
 */
