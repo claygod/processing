@@ -27,7 +27,6 @@ type Block struct {
 	//Hash         string
 	Saldo int64
 	// Hasp         int64
-	// Transactions       *TransactionsStore // ToDo: сохранить тут номера и получать по мере надобности из репозитория
 	Transactions *TransactionsHashes
 }
 
@@ -36,8 +35,6 @@ NewBlock - create new Block.
 */
 func NewBlock() *Block {
 	b := &Block{
-		//Number:       num,
-		//Transactions: NewTransactionsStore(), // make([]*Transaction, 0),
 		Transactions: NewTransactionsHashes(),
 	}
 	return b
@@ -53,7 +50,7 @@ func (b *Block) Hashes() map[string]int64 {
 	return b.Transactions.HashesList()
 }
 
-func (b *Block) Close222() { // (string, error)
+func (b *Block) Close222() {
 	//b.lock()
 	//defer b.unlock()
 	for {

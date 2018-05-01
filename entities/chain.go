@@ -40,13 +40,9 @@ func (c *Chain) AddTransaction(t *Transaction) {
 
 func (c *Chain) Switch(t *Transaction) int64 {
 	newBlock := NewBlock()
-	// oldBlock := c.OverlapBlock
 	nCb := NewCurrentBlocks(newBlock, c.CurrentBlock)
-	//addr := uintptr(unsafe.Pointer(c.CurBlocks))
-	//atomic.StoreUintptr(&addr, uintptr(unsafe.Pointer(nCb)))
 	addr := unsafe.Pointer(c.CurBlocks)
 	atomic.StorePointer(&addr, unsafe.Pointer(nCb))
-	//oldBlock.Close()
 	c.BlockRepository.Write(c.OverlapBlock)
 	return 0
 }
