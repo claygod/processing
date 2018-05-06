@@ -25,9 +25,6 @@ type Transaction struct {
 NewTransaction - create new Transaction.
 */
 func NewTransaction(initiator string, broker string) *Transaction {
-	//t := &Transaction{}
-	//t.newBody(initiator, broker)
-	//return t
 	return &Transaction{
 		Body:       newTransactionBody(initiator, broker),
 		Signatures: make([]*TransactionSignature, 0, 2),
