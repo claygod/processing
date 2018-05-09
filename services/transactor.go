@@ -9,21 +9,23 @@ import (
 )
 
 type Transactor struct {
-	units *entities.UnitRepository
+	uRepo *entities.UnitRepository
+	// tRepo *entities.TransactionRepository
 }
 
-func NewTransactor(units *entities.UnitRepository) *Transactor {
+func NewTransactor(units *entities.UnitRepository) *Transactor { // , transactions *entities.TransactionRepository
 	return &Transactor{
-		units: units,
+		uRepo: units,
+		// tRepo: transactions,
 	}
 }
 
 func (m *Transactor) Prepare(t *entities.Transaction) error {
 	return nil
 }
-func (m *Transactor) Rollback(t *entities.Transaction) error {
+func (m *Transactor) Rollback(key string) error {
 	return nil
 }
-func (m *Transactor) Execute(t *entities.Transaction) error {
+func (m *Transactor) Execute(key string) error {
 	return nil
 }

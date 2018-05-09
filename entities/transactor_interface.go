@@ -9,6 +9,6 @@ Transactor - transaction service.
 */
 type Transactor interface {
 	Prepare(*Transaction) error
-	Rollback(*Transaction) error
-	Execute(*Transaction) error
+	Rollback(string) error
+	Execute(string) error
 }
