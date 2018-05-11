@@ -1,7 +1,7 @@
 package repositories
 
 // Processing
-// Resource repository (implementation)
+// ResourceRepository
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 import (
@@ -12,64 +12,43 @@ import (
 )
 
 /*
-ResourceRepository - storage resource (implementation).
-This repository is not allowed to delete entities!
+ResourceRepository - .
 */
 type ResourceRepository struct {
 	sync.RWMutex
-	resources []entities.Resource
-	// indexId   map[int]int
-	indexName map[string]int
-	// encoder   entities.Encoder
+	Data map[string]*entities.Resource
 }
 
 /*
 NewResourceRepository - create new ResourceRepository.
 */
-func NewResourceRepository() *ResourceRepository {
-	r := &ResourceRepository{
-		resources: make([]entities.Resource, 0),
-		indexName: make(map[string]int),
+func NewResourceRepository() ResourceRepository {
+	r := ResourceRepository{
+		Data: make(map[string]*entities.Resource),
 	}
 	return r
 }
 
-/*
-Create - create new Resource.
-Return resource-id.
-*/
-func (t *ResourceRepository) Create(name string) (int, error) {
-	t.Lock()
-	defer t.Unlock()
-	if _, ok := t.indexName[name]; ok {
-		return -1, fmt.Errorf("Resource %s already exists", name)
+func (r *ResourceRepository) Create(id string, description string) error {
+	r.Lock()
+	defer r.Unlock()
+	if _, ok := r.Data[id]; ok {
+		return fmt.Errorf("Resource `%s` already exists.", id)
 	}
-	num := len(t.resources)
-	nr := entities.NewResource(name, num)
-	t.resources = append(t.resources, nr)
-	t.indexName[name] = num
-	return num, nil
+	r.Data[id] = entities.NewResource(id, description)
+	return nil
 }
 
-/*
-Read - get a resource at his id.
-*/
-func (t *ResourceRepository) Read(id int) (entities.Resource, error) {
-	t.RLock()
-	defer t.RUnlock()
-	if len(t.resources) < id-1 {
-		return entities.Resource{}, fmt.Errorf("Resource %d does not exist", id)
-	}
-	return t.resources[id], nil
+func (r *ResourceRepository) Read(id string) (*entities.Resource, bool) {
+	r.RLock()
+	defer r.RUnlock()
+	res, ok := r.Data[id]
+	return res, ok
 }
 
-/*
-List - get a resources list.
-*/
-func (t *ResourceRepository) List() []entities.Resource {
-	t.RLock()
-	defer t.RUnlock()
-	nrr := make([]entities.Resource, len(t.resources))
-	copy(nrr, t.resources)
-	return nrr
+func (r *ResourceRepository) Exists(id string) bool {
+	r.RLock()
+	defer r.RUnlock()
+	_, ok := r.Data[id]
+	return ok
 }

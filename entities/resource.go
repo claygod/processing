@@ -8,17 +8,16 @@ package entities
 Resource - an important node in the network.
 */
 type Resource struct {
-	id   int
-	name string
+	id          string
+	description string
 }
 
 /*
 NewResource - create new Resource.
 */
-func NewResource(name string, id int) Resource {
-	r := Resource{
-		id:   id,
-		name: name,
+func NewResource(id string, description string) *Resource {
+	return &Resource{
+		id:          id,
+		description: description,
 	}
-	return r
 }
