@@ -19,8 +19,6 @@ Operates in non-blocking mode.
 type Account struct {
 	available int64
 	blocked   int64
-	//Address   string
-	//PubKey    []byte
 }
 
 /*

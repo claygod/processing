@@ -10,6 +10,6 @@ This repository is not allowed to delete entities!
 */
 type AccountRepository interface {
 	//Create([]byte) (string, error)
-	Read(string) *Account
+	Read(string, string) *Account
 	//List() []Account
 }

@@ -6,6 +6,8 @@ package entities
 
 import (
 	"fmt"
+	"runtime"
+	"sync/atomic"
 	// "sync"
 )
 
@@ -20,8 +22,9 @@ Unit - .
 
 */
 type Unit struct {
-	// sync.RWMutex
-	pubKey   []byte
+	hasp     int64
+	pubKey   string
+	accounts map[string]*Account
 	accsRepo AccountRepository
 }
 
@@ -35,9 +38,49 @@ func NewUnit(ar AccountRepository) *Unit {
 	return u
 }
 
-func (u *Unit) Debit(key string, amount int64) (int64, error) {
-	if ln := len(key); ln == 0 || ln > maxKeyLen {
-		return -1, fmt.Errorf("Error in the length of the name of the requested account: %d. (Name: %s)", ln, key)
+func (u *Unit) Account(acc string) *Account {
+	u.lock()
+	defer u.unlock()
+	a, ok := u.accounts[acc]
+	if !ok {
+		a = u.getAccount(acc)
+		u.accounts[acc] = a
 	}
-	return u.accsRepo.Read(key).Debit(amount)
+	return a
+}
+
+func (u *Unit) getAccount(acc string) *Account {
+	return u.accsRepo.Read(u.pubKey, acc)
+}
+
+func (u *Unit) Debit(acc string, amount int64) (int64, error) {
+	if ln := len(acc); ln == 0 || ln > maxKeyLen {
+		return -1, fmt.Errorf("Error in the length of the name of the requested account: %d. (Name: %s)", ln, acc)
+	}
+	return u.accsRepo.Read(u.pubKey, acc).Debit(amount)
+}
+
+func (u *Unit) Credit(acc string, amount int64) (int64, error) {
+	if ln := len(acc); ln == 0 || ln > maxKeyLen {
+		return -1, fmt.Errorf("Error in the length of the name of the requested account: %d. (Name: %s)", ln, acc)
+	}
+	return u.accsRepo.Read(u.pubKey, acc).Credit(amount)
+}
+
+func (u *Unit) lock() {
+	for {
+		if atomic.CompareAndSwapInt64(&u.hasp, unlocked, blocked) {
+			return
+		}
+		runtime.Gosched()
+	}
+}
+
+func (u *Unit) unlock() {
+	for {
+		if atomic.CompareAndSwapInt64(&u.hasp, blocked, unlocked) {
+			return
+		}
+		runtime.Gosched()
+	}
 }
