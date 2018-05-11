@@ -9,6 +9,10 @@ import (
 	"strconv"
 )
 
+/*
+Parcel
+Посылка (бандероль) для отправки сообщений пачками (не по одному).
+*/
 type Parcel struct {
 	Sender   string `json:"from"`
 	SentTime int64  `json:"exit"`

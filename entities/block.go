@@ -19,8 +19,8 @@ const (
 Block -
 */
 type Block struct {
-	Saldo        int64
-	Transactions *TransactionsHashes
+	Saldo       int64
+	HashesStore *TransactionsHashes
 }
 
 /*
@@ -28,19 +28,19 @@ NewBlock - create new Block.
 */
 func NewBlock() *Block {
 	b := &Block{
-		Transactions: NewTransactionsHashes(),
+		HashesStore: NewTransactionsHashes(),
 	}
 	return b
 }
 
 func (b *Block) WriteTransaction(hash string, amount int64) error {
-	b.Transactions.AddTransaction(hash, amount)
+	b.HashesStore.AddHash(hash, amount)
 	atomic.AddInt64(&b.Saldo, amount)
 	return nil
 }
 
 func (b *Block) Hashes() map[string]int64 {
-	return b.Transactions.HashesList()
+	return b.HashesStore.HashesList()
 }
 
 type TransactionsHashes struct {
@@ -56,7 +56,7 @@ func NewTransactionsHashes() *TransactionsHashes {
 	return t
 }
 
-func (t *TransactionsHashes) AddTransaction(hash string, saldo int64) {
+func (t *TransactionsHashes) AddHash(hash string, saldo int64) {
 	t.lock()
 	defer t.unlock()
 	t.Hashes[hash] = saldo
@@ -93,8 +93,9 @@ func (t *TransactionsHashes) unlock() {
 /*
 BlockHash - служит для хранения ссылок на два актуальных блока
 и возможности через пойнтер одновременно (атомарно) их сменить.
-*/
+
 type BlockHash struct {
 	Saldo        int64
 	Transactions map[string]bool
 }
+*/

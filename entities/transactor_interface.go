@@ -8,7 +8,7 @@ package entities
 Transactor - transaction service.
 */
 type Transactor interface {
-	Prepare(*Transaction) error
-	Rollback(string) error
-	Execute(string) error
+	Prepare() error
+	Rollback() error
+	Execute() error
 }

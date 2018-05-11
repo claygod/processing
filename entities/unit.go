@@ -5,7 +5,7 @@ package entities
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 import (
-	"fmt"
+	// "fmt"
 	"runtime"
 	"sync/atomic"
 	// "sync"
@@ -25,15 +25,16 @@ type Unit struct {
 	hasp     int64
 	pubKey   string
 	accounts map[string]*Account
-	accsRepo AccountRepository
+	// accsRepo AccountRepository
 }
 
 /*
 NewUnit - create new Unit.
 */
-func NewUnit(ar AccountRepository) *Unit {
+func NewUnit() *Unit { // ar AccountRepository
 	u := &Unit{
-		accsRepo: ar,
+		accounts: make(map[string]*Account),
+		//accsRepo: ar,
 	}
 	return u
 }
@@ -43,12 +44,13 @@ func (u *Unit) Account(acc string) *Account {
 	defer u.unlock()
 	a, ok := u.accounts[acc]
 	if !ok {
-		a = u.getAccount(acc)
+		a = NewAccount() // u.getAccount(acc)
 		u.accounts[acc] = a
 	}
 	return a
 }
 
+/*
 func (u *Unit) getAccount(acc string) *Account {
 	return u.accsRepo.Read(u.pubKey, acc)
 }
@@ -66,7 +68,7 @@ func (u *Unit) Credit(acc string, amount int64) (int64, error) {
 	}
 	return u.accsRepo.Read(u.pubKey, acc).Credit(amount)
 }
-
+*/
 func (u *Unit) lock() {
 	for {
 		if atomic.CompareAndSwapInt64(&u.hasp, unlocked, blocked) {
