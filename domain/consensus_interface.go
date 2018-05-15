@@ -1,8 +1,15 @@
-package entities
+package domain
 
 // Processing
 // Consensus (interface)
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
+
+const (
+	ConsensusStateMissing int64 = iota
+	ConsensusStateFills
+	ConsensusStatePositive
+	ConsensusStateNegative
+)
 
 /*
 Consensus - interface.
@@ -30,7 +37,7 @@ type Consensus interface { // enumerator
 		создание подтверждающего модуля и фиксирует время создания. По этому времени
 		можно будет делать выводы по удалению.
 	*/
-	Confirm(string)
+	Confirm(string, bool) int64
 	Clear() []string   // возвращает список транзакций к удалению
 	Ready() []string   // возвращает список утверждённых транзакций
 	SetDuration(int64) // устанавливаем время жизни каждого консенсуса

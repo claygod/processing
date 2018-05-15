@@ -1,4 +1,4 @@
-package entities
+package domain
 
 // Processing
 // Chain
@@ -8,12 +8,14 @@ import (
 	// "fmt"
 	"sync/atomic"
 	"unsafe"
+	// "github.com/claygod/processing/entities"
 )
 
 /*
 Chain -
 */
 type Chain struct {
+	Counter         int64
 	CurrentBlock    *Block
 	OverlapBlock    *Block
 	CurBlocks       *CurrentBlocks
@@ -38,13 +40,21 @@ func (c *Chain) AddTransaction(t *Transaction) {
 	c.CurBlocks.OverlapBlock.WriteTransaction(t.Hash, t.Amount())
 }
 
+func (c *Chain) GetCounter() int64 {
+	return atomic.LoadInt64(&c.Counter)
+}
+
+func (c *Chain) SetCounter(newCount int64) {
+	atomic.StoreInt64(&c.Counter, newCount)
+}
+
 func (c *Chain) Switch(t *Transaction) int64 {
 	newBlock := NewBlock()
 	nCb := NewCurrentBlocks(newBlock, c.CurrentBlock)
 	addr := unsafe.Pointer(c.CurBlocks)
 	atomic.StorePointer(&addr, unsafe.Pointer(nCb))
-	c.BlockRepository.Write(c.OverlapBlock)
-	return 0
+	c.BlockRepository.Write(atomic.LoadInt64(&c.Counter), c.OverlapBlock)
+	return atomic.AddInt64(&c.Counter, 1)
 }
 
 /*

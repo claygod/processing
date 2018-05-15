@@ -1,4 +1,4 @@
-package entities
+package domain
 
 // Processing
 // Blocks repository (interface)
@@ -8,6 +8,6 @@ package entities
 BlockRepository - storage blocks interface.
 */
 type BlockRepository interface {
-	Write(*Block) error
+	Write(int64, *Block) error
 	Read(int64) (*Block, error)
 }

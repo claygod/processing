@@ -13,6 +13,11 @@ import (
 
 const maxKeyLen int = 100
 
+const (
+	unlocked int64 = iota
+	blocked
+)
+
 /*
 Unit - .
 

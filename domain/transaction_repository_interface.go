@@ -1,4 +1,4 @@
-package entities
+package domain
 
 // Processing
 // Transactions repository (interface)
@@ -10,5 +10,5 @@ This repository is not allowed to delete entities!
 */
 type TransactionRepository interface {
 	Write(*Transaction) error
-	Read(int) (*Transaction, error)
+	Read(string) (*Transaction, error)
 }
