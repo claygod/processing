@@ -9,6 +9,7 @@ const (
 	ConsensusStateFills
 	ConsensusStatePositive
 	ConsensusStateNegative
+	ConsensusStateExpired
 )
 
 /*
@@ -32,8 +33,9 @@ This repository is not allowed to delete entities!
 */
 type Consensus interface { // enumerator
 	// Create(*Transaction) error
+
 	/*
-		Подтверждение может дублировать создание, т.е. первый конфирм инициализирует
+		Confirm - подтверждение дублирует создание, т.е. первый конфирм инициализирует
 		создание подтверждающего модуля и фиксирует время создания. По этому времени
 		можно будет делать выводы по удалению.
 	*/

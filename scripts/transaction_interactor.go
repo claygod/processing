@@ -49,17 +49,30 @@ func (t *TransactionInteractor) ToConfirm(tn *domain.Transaction) error {
 	return nil
 }
 
+/*
+AddOpinion
+
+Надо определиться с логикой, например, если голосования нет, то ведь и
+транзактора и транзакции нет. Хотя они могут появиться чуть позже.
+*/
 func (t *TransactionInteractor) AddOpinion(hash string, ok bool) {
 
 	switch t.Consensus.Confirm(hash, ok) {
 	case domain.ConsensusStateMissing:
-		//
+		// вариант, когда такого голосования нет, и нету среди старых
+		// Тут возможно создавать новое голосование заново (внутри консенсуса)
 	case domain.ConsensusStateFills:
-		//
+		// тут по идее ничего не нужно делать т.к. t.Consensus.Confirm уже
+		// сделал нужную работу по учёту мнения
+		return
 	case domain.ConsensusStatePositive:
 		t.ExecuteTransaction(hash)
 	case domain.ConsensusStateNegative:
 		t.RollbackTransaction(hash)
+	case domain.ConsensusStateExpired:
+		// вариант с устаревшим голосованием, по которому уже принято решение
+		// - просто отбрасываем мнение как не интересующее
+		return
 	}
 }
 
