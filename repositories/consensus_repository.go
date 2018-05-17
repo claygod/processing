@@ -25,7 +25,7 @@ ConsensusRepository - consensus store and vote.
 */
 type ConsensusRepository struct {
 	quorum int64
-	store  [256]*voteStore // 256 arrays to reduce access competitiveness
+	store  [256]*consensusStore // 256 arrays to reduce access competitiveness
 }
 
 /*
@@ -36,7 +36,7 @@ func NewConsensusRepository(quorum int64) *ConsensusRepository {
 		quorum: quorum,
 	}
 	for i := 0; i < 256; i++ {
-		c.store[i] = newVoteStore()
+		c.store[i] = newConsensusStore()
 	}
 	return c
 }
@@ -46,7 +46,7 @@ func (c *ConsensusRepository) Vote(unit string, key string, opinion bool) (int64
 	if len(key) > 0 {
 		shift = []byte(key)[0]
 	}
-	yes, no, err := c.store[shift].getVoting(key).vote(unit, opinion)
+	yes, no, err := c.store[shift].getConsensus(key).vote(unit, opinion)
 	if err != nil {
 		return domain.ConsensusFills, err
 	}
@@ -64,47 +64,35 @@ func (c *ConsensusRepository) SetQuorum(q int64) {
 }
 
 /*
-voteStore - vote substore.
+consensusStore - substore.
 */
-type voteStore struct {
+type consensusStore struct {
 	sync.Mutex
-	store map[string]*voting
+	store map[string]*consensus
 }
 
-func newVoteStore() *voteStore {
-	v := &voteStore{
-		store: make(map[string]*voting),
+func newConsensusStore() *consensusStore {
+	v := &consensusStore{
+		store: make(map[string]*consensus),
 	}
 	return v
 }
 
-func (v *voteStore) getVoting(key string) *voting {
+func (v *consensusStore) getConsensus(key string) *consensus {
 	v.Lock()
-	x, ok := v.store[key]
+	c, ok := v.store[key]
 	if !ok {
-		x = newVoting()
-		v.store[key] = x
+		c = newConsensus()
+		v.store[key] = c
 	}
 	v.Unlock()
-	return x
+	return c
 }
 
 /*
-func (v *voteStore) vote(key string, opinion bool) {
-	v.Lock()
-	a, ok := v.store[key]
-	if !ok {
-		a = newVoting()
-		v.store[key] = a
-	}
-	v.Unlock()
-	// return a
-}
+consensus - vote.
 */
-/*
-voting - vote.
-*/
-type voting struct {
+type consensus struct {
 	// status  int64
 	sync.Mutex
 	yes      int64
@@ -112,14 +100,14 @@ type voting struct {
 	opinions map[string]bool
 }
 
-func newVoting() *voting {
-	v := &voting{
+func newConsensus() *consensus {
+	v := &consensus{
 		opinions: make(map[string]bool),
 	}
 	return v
 }
 
-func (v *voting) vote(unit string, opinion bool) (int64, int64, error) {
+func (v *consensus) vote(unit string, opinion bool) (int64, int64, error) {
 	v.Lock()
 	defer v.Unlock()
 	if _, ok := v.opinions[unit]; ok {
