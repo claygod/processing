@@ -5,11 +5,20 @@ package repositories
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 import (
+	"fmt"
 	"sync"
+	"sync/atomic"
+
+	"github.com/claygod/processing/domain"
+)
+
+const (
+	flagStop int32 = iota
+	flagWork
 )
 
 /*
-ConsensusRepository - consensus store.
+ConsensusRepository - consensus store and vote.
 Репозиторий не следит за временем голосования, этот функционал лучше
 передать в репо транзакторов или ещё куда, т.е. может быть так:
 консенсус достигнут, но транзактора нет, значит и ничего консенсус не толкнет.
@@ -32,12 +41,26 @@ func NewConsensusRepository(quorum int64) *ConsensusRepository {
 	return c
 }
 
-func (c *ConsensusRepository) Vote(key string, opinion bool) {
+func (c *ConsensusRepository) Vote(unit string, key string, opinion bool) (int64, error) {
 	var shift byte
 	if len(key) > 0 {
 		shift = []byte(key)[0]
 	}
-	c.store[shift].vote(key, opinion)
+	yes, no, err := c.store[shift].getVoting(key).vote(unit, opinion)
+	if err != nil {
+		return domain.ConsensusFills, err
+	}
+	if yes >= c.quorum {
+		return domain.ConsensusPositive, nil
+	}
+	if no >= c.quorum {
+		return domain.ConsensusNegative, nil
+	}
+	return domain.ConsensusFills, nil
+}
+
+func (c *ConsensusRepository) SetQuorum(q int64) {
+	atomic.StoreInt64(&c.quorum, q)
 }
 
 /*
@@ -55,6 +78,18 @@ func newVoteStore() *voteStore {
 	return v
 }
 
+func (v *voteStore) getVoting(key string) *voting {
+	v.Lock()
+	x, ok := v.store[key]
+	if !ok {
+		x = newVoting()
+		v.store[key] = x
+	}
+	v.Unlock()
+	return x
+}
+
+/*
 func (v *voteStore) vote(key string, opinion bool) {
 	v.Lock()
 	a, ok := v.store[key]
@@ -65,12 +100,13 @@ func (v *voteStore) vote(key string, opinion bool) {
 	v.Unlock()
 	// return a
 }
-
+*/
 /*
 voting - vote.
 */
 type voting struct {
 	// status  int64
+	sync.Mutex
 	yes      int64
 	no       int64
 	opinions map[string]bool
@@ -83,6 +119,16 @@ func newVoting() *voting {
 	return v
 }
 
-func (v *voting) vote2(key string, opinion bool) {
-
+func (v *voting) vote(unit string, opinion bool) (int64, int64, error) {
+	v.Lock()
+	defer v.Unlock()
+	if _, ok := v.opinions[unit]; ok {
+		return -1, -1, fmt.Errorf("Repeated voting '%s'.", unit)
+	}
+	if opinion {
+		v.yes++
+	} else {
+		v.no++
+	}
+	return v.yes, v.no, nil
 }

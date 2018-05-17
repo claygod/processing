@@ -5,11 +5,9 @@ package domain
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 const (
-	ConsensusStateMissing int64 = iota
-	ConsensusStateFills
-	ConsensusStatePositive
-	ConsensusStateNegative
-	ConsensusStateExpired
+	ConsensusFills int64 = iota
+	ConsensusPositive
+	ConsensusNegative
 )
 
 /*
@@ -39,7 +37,7 @@ type Consensus interface { // enumerator
 		создание подтверждающего модуля и фиксирует время создания. По этому времени
 		можно будет делать выводы по удалению.
 	*/
-	Vote(string, bool) int64
+	Vote(string, string, bool) int64
 	//Clear() []string   // возвращает список транзакций к удалению
 	//Ready() []string   // возвращает список утверждённых транзакций
 	// SetDuration(int64) // устанавливаем время жизни каждого консенсуса

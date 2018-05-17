@@ -55,24 +55,24 @@ AddOpinion
 Надо определиться с логикой, например, если голосования нет, то ведь и
 транзактора и транзакции нет. Хотя они могут появиться чуть позже.
 */
-func (t *TransactionInteractor) AddOpinion(hash string, ok bool) {
+func (t *TransactionInteractor) AddOpinion(unit string, hash string, ok bool) {
 
-	switch t.Consensus.Confirm(hash, ok) {
-	case domain.ConsensusStateMissing:
-		// вариант, когда такого голосования нет, и нету среди старых
-		// Тут возможно создавать новое голосование заново (внутри консенсуса)
-	case domain.ConsensusStateFills:
+	switch t.Consensus.Vote(unit, hash, ok) {
+	//case domain.ConsensusStateMissing:
+	// вариант, когда такого голосования нет, и нету среди старых
+	// Тут возможно создавать новое голосование заново (внутри консенсуса)
+	case domain.ConsensusFills:
 		// тут по идее ничего не нужно делать т.к. t.Consensus.Confirm уже
 		// сделал нужную работу по учёту мнения
 		return
-	case domain.ConsensusStatePositive:
+	case domain.ConsensusPositive:
 		t.ExecuteTransaction(hash)
-	case domain.ConsensusStateNegative:
+	case domain.ConsensusNegative:
 		t.RollbackTransaction(hash)
-	case domain.ConsensusStateExpired:
+		//case domain.ConsensusStateExpired:
 		// вариант с устаревшим голосованием, по которому уже принято решение
 		// - просто отбрасываем мнение как не интересующее
-		return
+		//return
 	}
 }
 
