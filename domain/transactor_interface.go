@@ -8,7 +8,7 @@ package domain
 Transactor - transaction service.
 */
 type Transactor interface {
-	Prepare() error
+	Prepare(*Transaction) error
 	Rollback() error
-	Execute() error
+	Finish() (*Transaction, error)
 }

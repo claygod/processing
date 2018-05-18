@@ -10,11 +10,11 @@ import (
 )
 
 type TransactionInteractor struct {
-	Chain            *domain.Chain
-	BlockRepo        domain.BlockRepository
-	Consensus        domain.Consensus
-	TransactorRepo   domain.TransactorRepository
-	WaitTransactions domain.WaitTransaction
+	Chain          *domain.Chain
+	BlockRepo      domain.BlockRepository
+	Consensus      domain.Consensus
+	TransactorRepo domain.TransactorRepository
+	//WaitTransactions domain.WaitTransaction
 }
 
 func NewTransactionInteractor(
@@ -22,7 +22,7 @@ func NewTransactionInteractor(
 	br domain.BlockRepository,
 	cs domain.Consensus,
 	tr domain.TransactorRepository,
-	wt domain.WaitTransaction,
+	//wt domain.WaitTransaction,
 ) *TransactionInteractor {
 
 	return &TransactionInteractor{
@@ -38,14 +38,14 @@ func (t *TransactionInteractor) ToConfirm(tn *domain.Transaction) error {
 	if err != nil {
 		return err
 	}
-	if err := tr.Prepare(); err != nil {
+	if err := tr.Prepare(tn); err != nil {
 		t.TransactorRepo.Delete(tn.Hash)
 		return err
 	}
-	if err := t.WaitTransactions.Write(tn); err != nil {
-		t.TransactorRepo.Delete(tn.Hash)
-		return err
-	}
+	//if err := t.WaitTransactions.Write(tn); err != nil {
+	//	t.TransactorRepo.Delete(tn.Hash)
+	//	return err
+	//}
 	return nil
 }
 
@@ -66,9 +66,9 @@ func (t *TransactionInteractor) AddOpinion(unit string, hash string, ok bool) {
 		// сделал нужную работу по учёту мнения
 		return
 	case domain.ConsensusPositive:
-		t.ExecuteTransaction(hash)
+		t.executeTransaction(hash)
 	case domain.ConsensusNegative:
-		t.RollbackTransaction(hash)
+		t.rollbackTransaction(hash)
 		//case domain.ConsensusStateExpired:
 		// вариант с устаревшим голосованием, по которому уже принято решение
 		// - просто отбрасываем мнение как не интересующее
@@ -76,25 +76,22 @@ func (t *TransactionInteractor) AddOpinion(unit string, hash string, ok bool) {
 	}
 }
 
-func (t *TransactionInteractor) ExecuteTransaction(hash string) error {
+func (t *TransactionInteractor) executeTransaction(hash string) error {
 	tr, err := t.TransactorRepo.Read(hash)
 	if err != nil {
 		return err
 	}
-	if err := tr.Execute(); err != nil {
+	trn, err := tr.Finish()
+	if err != nil {
 		t.TransactorRepo.Delete(hash)
 		return err
 	}
 	t.TransactorRepo.Delete(hash)
-	tn, err := t.WaitTransactions.Read(hash)
-	if err != nil {
-		return err // ToDo: этот вариант недопустим, если есть транзактор, должна быть и транзакция
-	}
-	t.Chain.AddTransaction(tn)
+	t.Chain.AddTransaction(trn)
 	return nil
 }
 
-func (t *TransactionInteractor) RollbackTransaction(hash string) error {
+func (t *TransactionInteractor) rollbackTransaction(hash string) error {
 	tr, err := t.TransactorRepo.Read(hash)
 	if err != nil {
 		return err
@@ -104,10 +101,5 @@ func (t *TransactionInteractor) RollbackTransaction(hash string) error {
 		return err
 	}
 	t.TransactorRepo.Delete(hash)
-
-	if err := t.WaitTransactions.Delete(hash); err != nil {
-		return err // ToDo: этот вариант недопустим, если есть транзактор, должна быть и транзакция
-	}
-	//t.Chain.AddTransaction(tn)
 	return nil
 }

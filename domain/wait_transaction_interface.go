@@ -6,8 +6,9 @@ package domain
 
 /*
 WaitTransaction - storage wait-transaction interface.
-*/
+
 type WaitTransaction interface {
 	TransactionRepository
 	Delete(string) error
 }
+*/

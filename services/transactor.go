@@ -6,7 +6,9 @@ package services
 
 import (
 	"fmt"
+	"sync/atomic"
 
+	"github.com/claygod/processing/domain"
 	"github.com/claygod/processing/entities"
 )
 
@@ -21,29 +23,30 @@ const (
 Transactor
 Создаётся для каждой транзакции отдельно.
 Только выполняет операции, записанные в транзакции.
-Не предназначен для использования в параллельном режиме.
+В параллельном режиме работает ТОЛЬКО метод Finish.
 */
 type Transactor struct {
 	status    int64
 	accsMinus []*entities.Account
 	accsPlus  []*entities.Account
-	tBody     *entities.TransactionBody
+	trn       *domain.Transaction
 }
 
-func NewTransactor(accsMinus []*entities.Account, accsPlus []*entities.Account, tBody *entities.TransactionBody) *Transactor {
+func NewTransactor() *Transactor {
 	return &Transactor{
 		status:    statusNov,
-		accsMinus: accsMinus,
-		accsPlus:  accsPlus,
-		tBody:     tBody,
+		accsMinus: make([]*entities.Account, 0),
+		accsPlus:  make([]*entities.Account, 0),
 	}
 }
 
-func (t *Transactor) Prepare() error {
+func (t *Transactor) Prepare(trn *domain.Transaction) error {
 	if t.status != statusNov {
 		return fmt.Errorf("This operation requires the status - %d, the actual status - %d.", statusNov, t.status)
 	}
-	for i, op := range t.tBody.Minus {
+	t.trn = trn
+
+	for i, op := range t.trn.Body.Minus {
 		if _, err := t.accsMinus[i].Block(op.Amount); err != nil {
 			t.rePrepare(i)
 			return err
@@ -55,7 +58,7 @@ func (t *Transactor) Prepare() error {
 
 func (t *Transactor) rePrepare(num int) {
 	for i := 0; i < num; i++ {
-		t.accsMinus[i].Unblock(t.tBody.Minus[i].Amount)
+		t.accsMinus[i].Unblock(t.trn.Body.Minus[i].Amount)
 	}
 }
 
@@ -67,16 +70,15 @@ func (t *Transactor) Rollback() error {
 	t.status = statusNov
 	return nil
 }
-func (t *Transactor) Finish() error {
-	if t.status != statusPrepared {
-		return fmt.Errorf("This operation requires the status - %d, the actual status - %d.", statusPrepared, t.status)
+func (t *Transactor) Finish() (*domain.Transaction, error) {
+	if !atomic.CompareAndSwapInt64(&t.status, statusPrepared, statusFinished) {
+		return nil, fmt.Errorf("This operation requires the status - %d, the actual status - %d.", statusPrepared, t.status)
 	}
-	for i, op := range t.tBody.Minus {
+	for i, op := range t.trn.Body.Minus {
 		t.accsMinus[i].Credit(op.Amount)
 	}
-	for i, op := range t.tBody.Plus {
+	for i, op := range t.trn.Body.Plus {
 		t.accsPlus[i].Debit(op.Amount)
 	}
-	t.status = statusFinished
-	return nil
+	return t.trn, nil
 }
