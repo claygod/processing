@@ -10,54 +10,65 @@ import (
 )
 
 type TransactionInteractor struct {
+	My             string
 	Chain          *domain.Chain
 	BlockRepo      domain.BlockRepository
 	Consensus      domain.Consensus
 	TransactorRepo domain.TransactorRepository
-	//WaitTransactions domain.WaitTransaction
+	Sender         Sender
 }
 
 func NewTransactionInteractor(
+	my string,
 	ch *domain.Chain,
 	br domain.BlockRepository,
 	cs domain.Consensus,
 	tr domain.TransactorRepository,
-	//wt domain.WaitTransaction,
+	sr Sender,
 ) *TransactionInteractor {
 
 	return &TransactionInteractor{
+		My:             my,
 		Chain:          ch, //domain.NewChain(br),
 		BlockRepo:      br,
 		Consensus:      cs,
 		TransactorRepo: tr,
+		Sender:         sr,
 	}
 }
 
-func (t *TransactionInteractor) ToConfirm(tn *domain.Transaction) error {
+/*
+AcceptAuthorityTransaction -  подтверждение полученной по сети транзакции (не от клиента).
+*/
+func (t *TransactionInteractor) AcceptAuthorityTransaction(tn *domain.Transaction) error {
+	// ToDo: validation and signature
+	opin := domain.NewOpinion(t.My, tn.Hash, false)
+
 	tr, err := t.TransactorRepo.Create(tn)
 	if err != nil {
+		// тут мнение не отсылаем, т.к. наверно отсылали его раньше
 		return err
 	}
 	if err := tr.Prepare(tn); err != nil {
 		t.TransactorRepo.Delete(tn.Hash)
+		t.Sender.SendOpinion(opin)
 		return err
 	}
-	//if err := t.WaitTransactions.Write(tn); err != nil {
-	//	t.TransactorRepo.Delete(tn.Hash)
-	//	return err
-	//}
+	opin.Ok = true
+	t.Sender.SendOpinion(opin)
 	return nil
 }
 
 /*
-AddOpinion
+AcceptAuthorityOpinion
 
 Надо определиться с логикой, например, если голосования нет, то ведь и
 транзактора и транзакции нет. Хотя они могут появиться чуть позже.
 */
-func (t *TransactionInteractor) AddOpinion(unit string, hash string, ok bool) {
+func (t *TransactionInteractor) AcceptAuthorityOpinion(opin *domain.Opinion) {
+	// ToDo: validation
 
-	switch t.Consensus.Vote(unit, hash, ok) {
+	switch t.Consensus.Vote(opin) {
 	//case domain.ConsensusStateMissing:
 	// вариант, когда такого голосования нет, и нету среди старых
 	// Тут возможно создавать новое голосование заново (внутри консенсуса)
@@ -66,9 +77,9 @@ func (t *TransactionInteractor) AddOpinion(unit string, hash string, ok bool) {
 		// сделал нужную работу по учёту мнения
 		return
 	case domain.ConsensusPositive:
-		t.executeTransaction(hash)
+		t.executeTransaction(opin.Hash)
 	case domain.ConsensusNegative:
-		t.rollbackTransaction(hash)
+		t.rollbackTransaction(opin.Hash)
 		//case domain.ConsensusStateExpired:
 		// вариант с устаревшим голосованием, по которому уже принято решение
 		// - просто отбрасываем мнение как не интересующее

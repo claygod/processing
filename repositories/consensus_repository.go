@@ -41,12 +41,31 @@ func NewConsensusRepository(quorum int64) *ConsensusRepository {
 	return c
 }
 
-func (c *ConsensusRepository) Vote(unit string, key string, opinion bool) (int64, error) {
+/*
+func (c *ConsensusRepository) Vote222(unit string, key string, opinion bool) (int64, error) {
 	var shift byte
 	if len(key) > 0 {
 		shift = []byte(key)[0]
 	}
 	yes, no, err := c.store[shift].getConsensus(key).vote(unit, opinion)
+	if err != nil {
+		return domain.ConsensusFills, err
+	}
+	if yes >= c.quorum {
+		return domain.ConsensusPositive, nil
+	}
+	if no >= c.quorum {
+		return domain.ConsensusNegative, nil
+	}
+	return domain.ConsensusFills, nil
+}
+*/
+func (c *ConsensusRepository) Vote(opin *domain.Opinion) (int64, error) {
+	var shift byte
+	if len(opin.Hash) > 0 {
+		shift = []byte(opin.Hash)[0]
+	}
+	yes, no, err := c.store[shift].getConsensus(opin.Hash).vote(opin.Unit, opin.Ok)
 	if err != nil {
 		return domain.ConsensusFills, err
 	}
