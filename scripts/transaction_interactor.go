@@ -15,7 +15,10 @@ type TransactionInteractor struct {
 	BlockRepo      domain.BlockRepository
 	Consensus      domain.Consensus
 	TransactorRepo domain.TransactorRepository
-	Sender         Sender
+	Send           Sender
+	Verify         Verificator
+	// Encrypt        entities.Encryptor
+	Sign domain.Signaturer
 }
 
 func NewTransactionInteractor(
@@ -25,6 +28,9 @@ func NewTransactionInteractor(
 	cs domain.Consensus,
 	tr domain.TransactorRepository,
 	sr Sender,
+	vr Verificator,
+	// en entities.Encryptor,
+	si domain.Signaturer,
 ) *TransactionInteractor {
 
 	return &TransactionInteractor{
@@ -33,7 +39,10 @@ func NewTransactionInteractor(
 		BlockRepo:      br,
 		Consensus:      cs,
 		TransactorRepo: tr,
-		Sender:         sr,
+		Send:           sr,
+		Verify:         vr,
+		// Encrypt:        en,
+		Sign: si,
 	}
 }
 
@@ -42,20 +51,27 @@ AcceptAuthorityTransaction -  подтверждение полученной п
 */
 func (t *TransactionInteractor) AcceptAuthorityTransaction(tn *domain.Transaction) error {
 	// ToDo: validation and signature
-	opin := domain.NewOpinion(t.My, tn.Hash, false)
+	if err := t.Verify.Transaction(tn); err != nil {
+		return err
+	}
 
 	tr, err := t.TransactorRepo.Create(tn)
 	if err != nil {
 		// тут мнение не отсылаем, т.к. наверно отсылали его раньше
 		return err
 	}
+
+	opin := domain.NewOpinion(t.My, tn.Hash, false)
+
 	if err := tr.Prepare(tn); err != nil {
 		t.TransactorRepo.Delete(tn.Hash)
-		t.Sender.SendOpinion(opin)
+		opin.AddSignature(t.Sign.MakeSignature(t.My, opin.GetHash()))
+		t.Send.Opinion(opin)
 		return err
 	}
 	opin.Ok = true
-	t.Sender.SendOpinion(opin)
+	opin.AddSignature(t.Sign.MakeSignature(t.My, opin.GetHash()))
+	t.Send.Opinion(opin)
 	return nil
 }
 

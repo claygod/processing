@@ -1,18 +1,17 @@
 package scripts
 
 // Processing
-// Sender
+// Verificator (interface)
 // Copyright © 2018 Eduard Sesigin. All rights reserved. Contacts: <claygod@yandex.ru>
 
 import (
-	// "fmt"
 	"github.com/claygod/processing/domain"
 )
 
 /*
-Sender - отправляет сообщения.
+Verificator - transaction verification.
 */
-type Sender interface {
-	Transaction(*domain.Transaction)
-	Opinion(*domain.Opinion)
+type Verificator interface {
+	Transaction(*domain.Transaction) error
+	Opinion(*domain.Opinion) error
 }

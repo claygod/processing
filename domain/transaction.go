@@ -18,7 +18,7 @@ Transaction -
 type Transaction struct {
 	Hash       string
 	Body       *TransactionBody
-	Signatures []*TransactionSignature
+	Signatures []*Signature
 }
 
 /*
@@ -27,7 +27,7 @@ NewTransaction - create new Transaction.
 func NewTransaction(initiator string, broker string) *Transaction {
 	return &Transaction{
 		Body:       newTransactionBody(initiator, broker),
-		Signatures: make([]*TransactionSignature, 0, 2),
+		Signatures: make([]*Signature, 0, 2),
 	}
 }
 
@@ -49,7 +49,7 @@ func (t *Transaction) Credit(unit string, account string, amount int64) *Transac
 	return t
 }
 
-func (t *Transaction) AddSignature(ts *TransactionSignature) error {
+func (t *Transaction) AddSignature(ts *Signature) error {
 	for _, s := range t.Signatures {
 		if s.Unit == ts.Unit {
 			fmt.Errorf("Signature unit %s has already been added.", ts.Unit)
@@ -114,7 +114,7 @@ func (t *Transaction) newBody(initiator string, broker string) {
 }
 */
 
-type TransactionSignature struct {
+type Signature struct {
 	Unit string
 	R    []byte
 	S    []byte
