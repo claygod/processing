@@ -9,5 +9,5 @@ Signaturer - signature service.
 */
 type Signaturer interface {
 	// Unit, Hash
-	MakeSignature(string, string) *Signature
+	Make(string, string) *Signature
 }

@@ -47,6 +47,37 @@ func NewTransactionInteractor(
 }
 
 /*
+AcceptClientTransaction -  подтверждение полученной от клиента транзакции (не по сети).
+*/
+func (t *TransactionInteractor) AcceptClientTransaction(tn *domain.Transaction) error {
+	tnHash, err := tn.GetHash()
+	if err != nil {
+		return err
+	}
+	tn.AddSignature(t.Sign.Make(t.My, tnHash))
+	if err := t.Verify.Transaction(tn); err != nil {
+		return err
+	}
+
+	tr, err := t.TransactorRepo.Create(tn)
+	if err != nil {
+		return err
+	}
+
+	if err := tr.Prepare(tn); err != nil {
+		t.TransactorRepo.Delete(tn.Hash)
+		return err
+	}
+	t.Send.Transaction(tn)
+	// поскольку мы рассылаем, значит наше мнение положительное
+	// и мы его сразу учитываем (принимаем)
+	opin := domain.NewOpinion(t.My, tn.Hash, true)
+	opin.AddSignature(t.Sign.Make(t.My, opin.GetHash()))
+	t.AcceptAuthorityOpinion(opin)
+	return nil
+}
+
+/*
 AcceptAuthorityTransaction -  подтверждение полученной по сети транзакции (не от клиента).
 */
 func (t *TransactionInteractor) AcceptAuthorityTransaction(tn *domain.Transaction) error {
@@ -65,12 +96,12 @@ func (t *TransactionInteractor) AcceptAuthorityTransaction(tn *domain.Transactio
 
 	if err := tr.Prepare(tn); err != nil {
 		t.TransactorRepo.Delete(tn.Hash)
-		opin.AddSignature(t.Sign.MakeSignature(t.My, opin.GetHash()))
+		opin.AddSignature(t.Sign.Make(t.My, opin.GetHash()))
 		t.Send.Opinion(opin)
 		return err
 	}
 	opin.Ok = true
-	opin.AddSignature(t.Sign.MakeSignature(t.My, opin.GetHash()))
+	opin.AddSignature(t.Sign.Make(t.My, opin.GetHash()))
 	t.Send.Opinion(opin)
 	return nil
 }
